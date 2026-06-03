@@ -30,6 +30,9 @@
     .ExcalidrawLogo-text {
       margin-left: 0.75rem;
       width: auto;
+      height: auto;
+      max-height: 100%;
+      object-fit: contain;
       color: var(--color-logo-text);
     }
 
