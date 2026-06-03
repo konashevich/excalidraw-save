@@ -124,26 +124,27 @@ export const SceneVaultDialog = ({
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="scene-vault-dialog__file-input"
-        accept=".excalidraw,.json,application/json"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          if (file) {
-            handleImportFile(file);
-          }
-        }}
-      />
-
       <Dialog
         className="scene-vault-dialog"
         onCloseRequest={onClose}
         title="My scenes"
         size="small"
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="scene-vault-dialog__file-input"
+          accept=".excalidraw,.json,application/json"
+          tabIndex={-1}
+          aria-hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) {
+              handleImportFile(file);
+            }
+          }}
+        />
         {(vaultQuotaExceeded || actionError) && (
           <p className="scene-vault-dialog__error" role="alert">
             {actionError ??
