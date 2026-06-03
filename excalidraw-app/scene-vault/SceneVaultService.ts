@@ -9,11 +9,12 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { LocalData } from "../data/LocalData";
 
 import { cloneVaultPayload } from "./clonePayload";
+import { parseExcalidrawFileForVault } from "./sceneImport";
 import { captureSceneFromAPICloned } from "./sceneCapture";
 import { downloadVaultSceneAsFile } from "./sceneExport";
 import { sceneVaultStore, type SceneVaultStore } from "./SceneVaultStore";
 import type { VaultScene } from "./types";
-import { isSceneNonEmpty } from "./utils";
+import { duplicateSceneTitle, isSceneNonEmpty } from "./utils";
 import { assertVaultEditingAllowed, isVaultEditingAllowed } from "./vaultGuards";
 import { flushVaultSync } from "./vaultSync";
 
@@ -135,6 +136,50 @@ export class SceneVaultService {
       throw new Error("Scene not found");
     }
     downloadVaultSceneAsFile(scene);
+  }
+
+  async renameScene(sceneId: string, title: string): Promise<VaultScene> {
+    assertVaultEditingAllowed();
+    const trimmed = title.trim();
+    if (!trimmed) {
+      throw new Error("Title cannot be empty.");
+    }
+
+    const scene = await this.store.getScene(sceneId);
+    if (!scene) {
+      throw new Error("Scene not found");
+    }
+
+    const updated: VaultScene = {
+      ...scene,
+      title: trimmed,
+      updatedAt: Date.now(),
+    };
+    await this.store.upsertScene(updated);
+    return updated;
+  }
+
+  async duplicateScene(sceneId: string): Promise<VaultScene> {
+    assertVaultEditingAllowed();
+    const scene = await this.store.getScene(sceneId);
+    if (!scene) {
+      throw new Error("Scene not found");
+    }
+
+    return this.store.createScene({
+      title: duplicateSceneTitle(scene.title),
+      payload: cloneVaultPayload(scene.payload),
+    });
+  }
+
+  /** Add a `.excalidraw` file to the vault without replacing the active canvas. */
+  async importSceneFromFile(file: File): Promise<VaultScene> {
+    assertVaultEditingAllowed();
+    const { payload, suggestedTitle } = await parseExcalidrawFileForVault(file);
+    return this.store.createScene({
+      title: suggestedTitle,
+      payload,
+    });
   }
 
   /**

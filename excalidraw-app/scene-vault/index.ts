@@ -17,8 +17,15 @@ export {
   countNonDeletedElements,
   isSceneNonEmpty,
   sanitizeFilename,
+  duplicateSceneTitle,
+  titleFromFilename,
   sortMetaByUpdatedAtDesc,
 } from "./utils";
+
+export {
+  parseExcalidrawFileForVault,
+  type ParsedVaultImport,
+} from "./sceneImport";
 
 export {
   SceneVaultStore,

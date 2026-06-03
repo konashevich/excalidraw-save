@@ -5,7 +5,11 @@ import type { DataURL } from "@excalidraw/excalidraw/types";
 
 import { rectangleFixture } from "@excalidraw/excalidraw/tests/fixtures/elementFixture";
 
-import { isSceneNonEmpty } from "./utils";
+import {
+  duplicateSceneTitle,
+  isSceneNonEmpty,
+  titleFromFilename,
+} from "./utils";
 
 describe("isSceneNonEmpty", () => {
   it("returns false for empty canvas", () => {
@@ -45,5 +49,18 @@ describe("isSceneNonEmpty", () => {
         },
       }),
     ).toBe(true);
+  });
+});
+
+describe("duplicateSceneTitle", () => {
+  it("appends (copy) to the scene title", () => {
+    expect(duplicateSceneTitle("Architecture v1")).toBe("Architecture v1 (copy)");
+  });
+});
+
+describe("titleFromFilename", () => {
+  it("strips path and extension", () => {
+    expect(titleFromFilename("/path/my-diagram.excalidraw")).toBe("my-diagram");
+    expect(titleFromFilename("sketch.json")).toBe("sketch");
   });
 });

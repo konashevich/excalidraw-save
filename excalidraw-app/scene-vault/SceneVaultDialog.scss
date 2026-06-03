@@ -40,7 +40,14 @@
   .scene-vault-dialog__actions {
     display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
     gap: 0.35rem;
+    justify-content: flex-end;
+    max-width: 11rem;
+  }
+
+  .scene-vault-dialog__file-input {
+    display: none;
   }
 
   .scene-vault-dialog__empty {

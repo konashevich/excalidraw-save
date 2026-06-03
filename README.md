@@ -89,6 +89,7 @@ When `VITE_APP_SCENE_VAULT=true`:
 - The **active canvas** still autosaves to browser `localStorage` (same as upstream) for fast reload and tab sync.
 - **My scenes** stores additional named snapshots in **IndexedDB** on your device only.
 - **New canvas** archives the current drawing into the vault, then clears the editor.
+- **My scenes** dialog: Open, Rename, Duplicate, Delete, Download, and **Import file** (adds `.excalidraw` to the vault without replacing the active canvas).
 - Nothing is uploaded to Excalidraw servers unless you use existing share/export features.
 
 ## Features

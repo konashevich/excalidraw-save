@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Dialog } from "@excalidraw/excalidraw/components/Dialog";
 import DialogActionButton from "@excalidraw/excalidraw/components/DialogActionButton";
 import ConfirmDialog from "@excalidraw/excalidraw/components/ConfirmDialog";
+import { TextField } from "@excalidraw/excalidraw/components/TextField";
 
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
@@ -48,10 +49,13 @@ export const SceneVaultDialog = ({
 }: Props) => {
   const [scenes, setScenes] = useState<VaultSceneMeta[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<VaultSceneMeta | null>(null);
+  const [renameTarget, setRenameTarget] = useState<VaultSceneMeta | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const vaultQuotaExceeded = useAtomValue(sceneVaultQuotaExceededAtom);
   const listRevision = useAtomValue(sceneVaultListRevisionAtom);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshList = useCallback(async () => {
     const list = await sceneVaultStore.listScenes();
@@ -74,6 +78,12 @@ export const SceneVaultDialog = ({
       onScenesChange();
     });
   }, [isOpen, refreshList, onScenesChange]);
+
+  useEffect(() => {
+    if (renameTarget) {
+      setRenameTitle(renameTarget.title);
+    }
+  }, [renameTarget]);
 
   const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -98,12 +108,36 @@ export const SceneVaultDialog = ({
     }
   };
 
+  const openImportPicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportFile = (file: File) => {
+    void runAction(async () => {
+      await sceneVaultService.importSceneFromFile(file);
+    });
+  };
+
   if (!isOpen) {
     return null;
   }
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="scene-vault-dialog__file-input"
+        accept=".excalidraw,.json,application/json"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) {
+            handleImportFile(file);
+          }
+        }}
+      />
+
       <Dialog
         className="scene-vault-dialog"
         onCloseRequest={onClose}
@@ -128,12 +162,18 @@ export const SceneVaultDialog = ({
             }
             disabled={busy}
           />
+          <DialogActionButton
+            label="Import file"
+            onClick={openImportPicker}
+            disabled={busy}
+          />
         </div>
 
         {scenes.length === 0 ? (
           <p className="scene-vault-dialog__empty">
             No saved scenes yet. Use &quot;New canvas&quot; to archive your
-            current drawing and start fresh.
+            current drawing, or &quot;Import file&quot; to add a .excalidraw
+            file to My scenes.
           </p>
         ) : (
           <ul className="scene-vault-dialog__list">
@@ -161,6 +201,20 @@ export const SceneVaultDialog = ({
                         if (ok) {
                           onClose();
                         }
+                      })
+                    }
+                    disabled={busy}
+                  />
+                  <DialogActionButton
+                    label="Rename"
+                    onClick={() => setRenameTarget(scene)}
+                    disabled={busy}
+                  />
+                  <DialogActionButton
+                    label="Duplicate"
+                    onClick={() =>
+                      runAction(async () => {
+                        await sceneVaultService.duplicateScene(scene.id);
                       })
                     }
                     disabled={busy}
@@ -200,6 +254,27 @@ export const SceneVaultDialog = ({
           <p>
             Delete &quot;{deleteTarget.title}&quot;? This cannot be undone.
           </p>
+        </ConfirmDialog>
+      )}
+
+      {renameTarget && (
+        <ConfirmDialog
+          title="Rename scene"
+          onConfirm={() =>
+            runAction(async () => {
+              await sceneVaultService.renameScene(renameTarget.id, renameTitle);
+              setRenameTarget(null);
+            })
+          }
+          onCancel={() => setRenameTarget(null)}
+        >
+          <TextField
+            label="Title"
+            value={renameTitle}
+            onChange={setRenameTitle}
+            fullWidth
+            selectOnRender
+          />
         </ConfirmDialog>
       )}
     </>

@@ -6,6 +6,7 @@ import { rectangleFixture } from "@excalidraw/excalidraw/tests/fixtures/elementF
 
 import { SceneVaultService } from "./SceneVaultService";
 import { SceneVaultStore } from "./SceneVaultStore";
+import { parseExcalidrawFileForVault } from "./sceneImport";
 import type { VaultScenePayload } from "./types";
 import { setVaultOperationContext } from "./vaultGuards";
 import { SceneVaultUnavailableError } from "./vaultErrors";
@@ -14,6 +15,10 @@ vi.mock("../data/LocalData", () => ({
   LocalData: {
     flushSave: vi.fn(),
   },
+}));
+
+vi.mock("./sceneImport", () => ({
+  parseExcalidrawFileForVault: vi.fn(),
 }));
 
 const testStore = createStore(
@@ -93,6 +98,74 @@ describe("SceneVaultService", () => {
       }),
     );
     expect(await store.getActiveSceneId()).toBe(sceneB.id);
+  });
+
+  it("renames a vault scene", async () => {
+    const scene = await store.createScene({
+      title: "Old name",
+      payload: {
+        elements: [{ ...rectangleFixture, id: "r1" }],
+        appState: {},
+        files: {},
+      },
+    });
+
+    const updated = await service.renameScene(scene.id, "New name");
+    expect(updated.title).toBe("New name");
+
+    const list = await store.listScenes();
+    expect(list[0]?.title).toBe("New name");
+  });
+
+  it("duplicates a vault scene with a new id", async () => {
+    const scene = await store.createScene({
+      title: "Original",
+      payload: {
+        elements: [{ ...rectangleFixture, id: "r1" }],
+        appState: {},
+        files: {},
+      },
+    });
+
+    const copy = await service.duplicateScene(scene.id);
+    expect(copy.id).not.toBe(scene.id);
+    expect(copy.title).toBe("Original (copy)");
+    expect(await store.listScenes()).toHaveLength(2);
+  });
+
+  it("imports a file into the vault without changing active id", async () => {
+    vi.mocked(parseExcalidrawFileForVault).mockResolvedValue({
+      suggestedTitle: "imported",
+      payload: {
+        elements: [{ ...rectangleFixture, id: "from-file" }],
+        appState: {},
+        files: {},
+      },
+    });
+
+    const file = new File([], "imported.excalidraw", {
+      type: "application/json",
+    });
+    const imported = await service.importSceneFromFile(file);
+
+    expect(imported.title).toBe("imported");
+    expect(await store.getActiveSceneId()).toBeNull();
+    expect(await store.listScenes()).toHaveLength(1);
+  });
+
+  it("rejects empty rename titles", async () => {
+    const scene = await store.createScene({
+      title: "Named",
+      payload: {
+        elements: [{ ...rectangleFixture }],
+        appState: {},
+        files: {},
+      },
+    });
+
+    await expect(service.renameScene(scene.id, "   ")).rejects.toThrow(
+      "Title cannot be empty.",
+    );
   });
 
   it("newCanvas archives then clears active id", async () => {

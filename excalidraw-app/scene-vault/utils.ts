@@ -20,6 +20,19 @@ export const sanitizeFilename = (title: string): string => {
   return sanitized || "scene";
 };
 
+/** Title for a duplicated vault entry. */
+export const duplicateSceneTitle = (title: string): string => {
+  const base = title.trim() || "Scene";
+  return `${base} (copy)`;
+};
+
+/** Derive a vault title from an imported file name. */
+export const titleFromFilename = (filename: string): string => {
+  const withoutPath = filename.replace(/^.*[/\\]/, "");
+  const withoutExt = withoutPath.replace(/\.(excalidraw|json)$/i, "").trim();
+  return sanitizeFilename(withoutExt) || defaultSceneTitle();
+};
+
 export const sortMetaByUpdatedAtDesc = <T extends { updatedAt: number }>(
   items: T[],
 ): T[] => [...items].sort((a, b) => b.updatedAt - a.updatedAt);
