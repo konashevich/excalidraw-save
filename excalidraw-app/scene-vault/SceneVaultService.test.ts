@@ -168,6 +168,36 @@ describe("SceneVaultService", () => {
     );
   });
 
+  it("persists cleared canvas to active vault entry before switching scenes", async () => {
+    const payloadA: VaultScenePayload = {
+      elements: [{ ...rectangleFixture, id: "a" }],
+      appState: {},
+      files: {},
+    };
+    const payloadB: VaultScenePayload = {
+      elements: [{ ...rectangleFixture, id: "b" }],
+      appState: {},
+      files: {},
+    };
+
+    const apiA = makeAPI(payloadA);
+    await service.archiveCurrentScene(apiA);
+    const activeId = await store.getActiveSceneId();
+    expect(activeId).not.toBeNull();
+
+    const apiEmpty = makeAPI({
+      elements: [],
+      appState: {},
+      files: {},
+    });
+    const sceneB = await store.createScene({ payload: payloadB, title: "B" });
+
+    await service.openScene(apiEmpty, sceneB.id);
+
+    const sceneA = await store.getScene(activeId!);
+    expect(sceneA?.elementCount).toBe(0);
+  });
+
   it("newCanvas archives then clears active id", async () => {
     const api = makeAPI({
       elements: [{ ...rectangleFixture }],

@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { Dialog } from "@excalidraw/excalidraw/components/Dialog";
 import DialogActionButton from "@excalidraw/excalidraw/components/DialogActionButton";
 import ConfirmDialog from "@excalidraw/excalidraw/components/ConfirmDialog";
 import { TextField } from "@excalidraw/excalidraw/components/TextField";
+import { ToolButton } from "@excalidraw/excalidraw/components/ToolButton";
+import {
+  DuplicateIcon,
+  downloadIcon,
+  pencilIcon,
+  TrashIcon,
+} from "@excalidraw/excalidraw/components/icons";
 
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
@@ -24,6 +32,9 @@ import { subscribeVaultChanges } from "./vaultTabSync";
 
 import "./SceneVaultDialog.scss";
 
+/** Default Dialog `small` (550px) + ~20% */
+const SCENE_VAULT_DIALOG_WIDTH = 660;
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -38,6 +49,127 @@ const formatUpdatedAt = (timestamp: number): string => {
   } catch {
     return "";
   }
+};
+
+type SceneVaultIconButtonProps = {
+  label: string;
+  icon: ReactNode;
+  disabled?: boolean;
+  variant?: "default" | "danger";
+  onClick: (event: MouseEvent) => void;
+};
+
+const SceneVaultIconButton = ({
+  label,
+  icon,
+  disabled,
+  variant = "default",
+  onClick,
+}: SceneVaultIconButtonProps) => (
+  <ToolButton
+    type="button"
+    size="small"
+    className={`scene-vault-dialog__icon-btn${
+      variant === "danger" ? " scene-vault-dialog__icon-btn--danger" : ""
+    }`}
+    aria-label={label}
+    title={label}
+    icon={icon}
+    disabled={disabled}
+    onClick={onClick}
+  />
+);
+
+type SceneVaultListItemProps = {
+  scene: VaultSceneMeta;
+  isActive: boolean;
+  busy: boolean;
+  onOpen: () => void;
+  onRename: () => void;
+  onDuplicate: () => void;
+  onDownload: () => void;
+  onDelete: () => void;
+};
+
+const SceneVaultListItem = ({
+  scene,
+  isActive,
+  busy,
+  onOpen,
+  onRename,
+  onDuplicate,
+  onDownload,
+  onDelete,
+}: SceneVaultListItemProps) => {
+  const stop = (event: MouseEvent) => {
+    event.stopPropagation();
+  };
+
+  return (
+    <li
+      className={`scene-vault-dialog__item${
+        isActive ? " scene-vault-dialog__item--active" : ""
+      }`}
+    >
+      <button
+        type="button"
+        className="scene-vault-dialog__item-open"
+        onClick={onOpen}
+        disabled={busy}
+        aria-label={`Open ${scene.title}`}
+      >
+        <span className="scene-vault-dialog__title">
+          {scene.title}
+          {isActive ? (
+            <span className="scene-vault-dialog__editing-badge">editing</span>
+          ) : null}
+        </span>
+        <span className="scene-vault-dialog__subtitle">
+          {formatUpdatedAt(scene.updatedAt)} · {scene.elementCount} elements
+        </span>
+      </button>
+
+      <div className="scene-vault-dialog__actions">
+        <SceneVaultIconButton
+          label="Rename"
+          icon={pencilIcon}
+          disabled={busy}
+          onClick={(event) => {
+            stop(event);
+            onRename();
+          }}
+        />
+        <SceneVaultIconButton
+          label="Duplicate"
+          icon={DuplicateIcon}
+          disabled={busy}
+          onClick={(event) => {
+            stop(event);
+            onDuplicate();
+          }}
+        />
+        <SceneVaultIconButton
+          label="Download"
+          icon={downloadIcon}
+          disabled={busy}
+          onClick={(event) => {
+            stop(event);
+            onDownload();
+          }}
+        />
+        <SceneVaultIconButton
+          label="Delete"
+          icon={TrashIcon}
+          variant="danger"
+          disabled={busy}
+          onClick={(event) => {
+            stop(event);
+            onDelete();
+          }}
+        />
+      </div>
+    </li>
+  );
 };
 
 export const SceneVaultDialog = ({
@@ -108,6 +240,22 @@ export const SceneVaultDialog = ({
     }
   };
 
+  const handleOpenScene = (sceneId: string) => {
+    if (activeSceneId === sceneId) {
+      onClose();
+      return;
+    }
+
+    void runAction(async () => {
+      const ok = await sceneVaultService.openScene(excalidrawAPI, sceneId);
+      if (ok) {
+        onClose();
+      } else {
+        setActionError("Scene could not be loaded. Try again or delete it.");
+      }
+    });
+  };
+
   const openImportPicker = () => {
     fileInputRef.current?.click();
   };
@@ -128,7 +276,7 @@ export const SceneVaultDialog = ({
         className="scene-vault-dialog"
         onCloseRequest={onClose}
         title="My scenes"
-        size="small"
+        size={SCENE_VAULT_DIALOG_WIDTH}
       >
         <input
           ref={fileInputRef}
@@ -177,65 +325,31 @@ export const SceneVaultDialog = ({
             file to My scenes.
           </p>
         ) : (
-          <ul className="scene-vault-dialog__list">
+          <ul
+            className="scene-vault-dialog__list"
+            aria-label="Saved scenes"
+            aria-busy={busy}
+          >
             {scenes.map((scene) => (
-              <li key={scene.id} className="scene-vault-dialog__item">
-                <div className="scene-vault-dialog__meta">
-                  <div className="scene-vault-dialog__title">
-                    {scene.title}
-                    {activeSceneId === scene.id ? " (editing)" : ""}
-                  </div>
-                  <div className="scene-vault-dialog__subtitle">
-                    {formatUpdatedAt(scene.updatedAt)} · {scene.elementCount}{" "}
-                    elements
-                  </div>
-                </div>
-                <div className="scene-vault-dialog__actions">
-                  <DialogActionButton
-                    label="Open"
-                    onClick={() =>
-                      runAction(async () => {
-                        const ok = await sceneVaultService.openScene(
-                          excalidrawAPI,
-                          scene.id,
-                        );
-                        if (ok) {
-                          onClose();
-                        }
-                      })
-                    }
-                    disabled={busy}
-                  />
-                  <DialogActionButton
-                    label="Rename"
-                    onClick={() => setRenameTarget(scene)}
-                    disabled={busy}
-                  />
-                  <DialogActionButton
-                    label="Duplicate"
-                    onClick={() =>
-                      runAction(async () => {
-                        await sceneVaultService.duplicateScene(scene.id);
-                      })
-                    }
-                    disabled={busy}
-                  />
-                  <DialogActionButton
-                    label="Download"
-                    onClick={() =>
-                      runAction(async () => {
-                        await sceneVaultService.downloadScene(scene.id);
-                      })
-                    }
-                    disabled={busy}
-                  />
-                  <DialogActionButton
-                    label="Delete"
-                    onClick={() => setDeleteTarget(scene)}
-                    disabled={busy}
-                  />
-                </div>
-              </li>
+              <SceneVaultListItem
+                key={scene.id}
+                scene={scene}
+                isActive={activeSceneId === scene.id}
+                busy={busy}
+                onOpen={() => handleOpenScene(scene.id)}
+                onRename={() => setRenameTarget(scene)}
+                onDuplicate={() =>
+                  runAction(async () => {
+                    await sceneVaultService.duplicateScene(scene.id);
+                  })
+                }
+                onDownload={() =>
+                  runAction(async () => {
+                    await sceneVaultService.downloadScene(scene.id);
+                  })
+                }
+                onDelete={() => setDeleteTarget(scene)}
+              />
             ))}
           </ul>
         )}

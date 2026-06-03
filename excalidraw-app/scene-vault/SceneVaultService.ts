@@ -28,17 +28,33 @@ export class SceneVaultService {
     LocalData.flushSave();
   }
 
+  private clearedPayloadFrom(
+    payload: ReturnType<typeof captureSceneFromAPICloned>,
+  ) {
+    return {
+      elements: [],
+      appState: payload.appState,
+      files: {},
+    };
+  }
+
   /** Persist the current canvas into the active vault entry (or create one). */
   private async persistActiveCanvas(
     api: ExcalidrawImperativeAPI,
   ): Promise<VaultScene | null> {
     const payload = captureSceneFromAPICloned(api);
+    const activeId = await this.store.getActiveSceneId();
 
     if (!isSceneNonEmpty(payload)) {
+      if (activeId) {
+        return this.store.upsertScenePayload(
+          this.clearedPayloadFrom(payload),
+          { id: activeId },
+        );
+      }
       return null;
     }
 
-    const activeId = await this.store.getActiveSceneId();
     if (activeId) {
       return this.store.upsertScenePayload(payload, { id: activeId });
     }
@@ -192,11 +208,18 @@ export class SceneVaultService {
     }
     const payload = captureSceneFromAPICloned(api);
 
+    const activeId = await this.store.getActiveSceneId();
+
     if (!isSceneNonEmpty(payload)) {
+      if (activeId) {
+        await this.store.upsertScenePayload(
+          this.clearedPayloadFrom(payload),
+          { id: activeId },
+        );
+      }
       return;
     }
 
-    const activeId = await this.store.getActiveSceneId();
     if (activeId) {
       await this.store.upsertScenePayload(payload, { id: activeId });
       return;
