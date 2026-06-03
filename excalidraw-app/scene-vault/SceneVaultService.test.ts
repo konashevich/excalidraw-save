@@ -7,6 +7,8 @@ import { rectangleFixture } from "@excalidraw/excalidraw/tests/fixtures/elementF
 import { SceneVaultService } from "./SceneVaultService";
 import { SceneVaultStore } from "./SceneVaultStore";
 import type { VaultScenePayload } from "./types";
+import { setVaultOperationContext } from "./vaultGuards";
+import { SceneVaultUnavailableError } from "./vaultErrors";
 
 vi.mock("../data/LocalData", () => ({
   LocalData: {
@@ -43,6 +45,25 @@ describe("SceneVaultService", () => {
     await clear(testStore);
     store = new SceneVaultStore({ store: testStore });
     service = new SceneVaultService(store);
+    setVaultOperationContext({
+      isCollaborating: false,
+      isExternalScene: false,
+    });
+  });
+
+  it("rejects mutations while collaborating", async () => {
+    setVaultOperationContext({
+      isCollaborating: true,
+      isExternalScene: false,
+    });
+    const api = makeAPI({
+      elements: [{ ...rectangleFixture }],
+      appState: {},
+      files: {},
+    });
+    await expect(service.newCanvas(api)).rejects.toThrow(
+      SceneVaultUnavailableError,
+    );
   });
 
   it("archives current scene and opens another", async () => {

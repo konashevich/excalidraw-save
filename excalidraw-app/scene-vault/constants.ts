@@ -20,3 +20,5 @@ export const sceneStorageKey = (id: string): string => `scene:${id}`;
 
 /** Debounced sync of the active canvas into the vault (ms). */
 export const VAULT_SYNC_DEBOUNCE_MS = 1500;
+
+export const VAULT_BROADCAST_CHANNEL = "excalidraw-scene-vault";

@@ -3,17 +3,24 @@ import type { BinaryFileData } from "@excalidraw/excalidraw/types";
 
 import type { VaultScenePayload } from "./types";
 
+const cloneFileData = (file: BinaryFileData): BinaryFileData => {
+  if (typeof structuredClone === "function") {
+    return structuredClone(file);
+  }
+  return { ...file };
+};
+
 const cloneFilesRecord = (
   files: VaultScenePayload["files"],
 ): VaultScenePayload["files"] => {
   const next: VaultScenePayload["files"] = {};
   for (const id of Object.keys(files) as FileId[]) {
-    next[id] = { ...files[id] };
+    next[id] = cloneFileData(files[id]);
   }
   return next;
 };
 
-/** Deep-enough copy so vault snapshots are not mutated by the live editor. */
+/** Deep copy so vault snapshots are not mutated by the live editor. */
 export const cloneVaultPayload = (
   payload: VaultScenePayload,
 ): VaultScenePayload => ({

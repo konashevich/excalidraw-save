@@ -14,14 +14,23 @@ import { downloadVaultSceneAsFile } from "./sceneExport";
 import { sceneVaultStore, type SceneVaultStore } from "./SceneVaultStore";
 import type { VaultScene } from "./types";
 import { isSceneNonEmpty } from "./utils";
+import { assertVaultEditingAllowed, isVaultEditingAllowed } from "./vaultGuards";
+import { flushVaultSync } from "./vaultSync";
 
 export class SceneVaultService {
   constructor(private readonly store: SceneVaultStore = sceneVaultStore) {}
 
-  async archiveCurrentScene(
+  private async flushBeforeVaultIO(
+    api: ExcalidrawImperativeAPI,
+  ): Promise<void> {
+    await flushVaultSync(api);
+    LocalData.flushSave();
+  }
+
+  /** Persist the current canvas into the active vault entry (or create one). */
+  private async persistActiveCanvas(
     api: ExcalidrawImperativeAPI,
   ): Promise<VaultScene | null> {
-    LocalData.flushSave();
     const payload = captureSceneFromAPICloned(api);
 
     if (!isSceneNonEmpty(payload)) {
@@ -38,15 +47,29 @@ export class SceneVaultService {
     return scene;
   }
 
+  async archiveCurrentScene(
+    api: ExcalidrawImperativeAPI,
+  ): Promise<VaultScene | null> {
+    assertVaultEditingAllowed();
+    await this.flushBeforeVaultIO(api);
+    return this.persistActiveCanvas(api);
+  }
+
   async openScene(
     api: ExcalidrawImperativeAPI,
     sceneId: string,
   ): Promise<boolean> {
+    assertVaultEditingAllowed();
     if ((await this.store.getActiveSceneId()) === sceneId) {
       return true;
     }
 
-    await this.archiveCurrentScene(api);
+    await this.flushBeforeVaultIO(api);
+
+    const activeId = await this.store.getActiveSceneId();
+    if (activeId) {
+      await this.persistActiveCanvas(api);
+    }
 
     const scene = await this.store.getScene(sceneId);
     if (!scene) {
@@ -83,7 +106,9 @@ export class SceneVaultService {
   }
 
   async newCanvas(api: ExcalidrawImperativeAPI): Promise<void> {
-    await this.archiveCurrentScene(api);
+    assertVaultEditingAllowed();
+    await this.flushBeforeVaultIO(api);
+    await this.persistActiveCanvas(api);
     api.resetScene();
     await this.store.setActiveSceneId(null);
     LocalData.flushSave();
@@ -93,6 +118,7 @@ export class SceneVaultService {
     sceneId: string,
     api?: ExcalidrawImperativeAPI,
   ): Promise<void> {
+    assertVaultEditingAllowed();
     const activeId = await this.store.getActiveSceneId();
     await this.store.deleteScene(sceneId);
 
@@ -116,6 +142,9 @@ export class SceneVaultService {
    * Creates a new vault entry when the canvas becomes non-empty and none is active.
    */
   async syncActiveScene(api: ExcalidrawImperativeAPI): Promise<void> {
+    if (!isVaultEditingAllowed()) {
+      return;
+    }
     const payload = captureSceneFromAPICloned(api);
 
     if (!isSceneNonEmpty(payload)) {

@@ -82,6 +82,15 @@ VITE_APP_SCENE_VAULT=true
 
 When the flag is `false`, the app behaves like upstream Excalidraw.
 
+### How scene vault storage works
+
+When `VITE_APP_SCENE_VAULT=true`:
+
+- The **active canvas** still autosaves to browser `localStorage` (same as upstream) for fast reload and tab sync.
+- **My scenes** stores additional named snapshots in **IndexedDB** on your device only.
+- **New canvas** archives the current drawing into the vault, then clears the editor.
+- Nothing is uploaded to Excalidraw servers unless you use existing share/export features.
+
 ## Features
 
 The Excalidraw editor (npm package) supports:

@@ -41,7 +41,7 @@ export {
 
 export {
   migrateLegacySceneIfNeeded,
-  migrateLegacySceneAfterInitialLoad,
+  migrateLegacySceneAfterImagesLoaded,
 } from "./migrateLegacyScene";
 
 export { SceneVaultService, sceneVaultService } from "./SceneVaultService";
@@ -49,5 +49,29 @@ export { SceneVaultService, sceneVaultService } from "./SceneVaultService";
 export { scheduleVaultSync, flushVaultSync } from "./vaultSync";
 
 export { SceneVaultDialog } from "./SceneVaultDialog";
+export { SceneVaultClearCanvasDialog } from "./SceneVaultClearCanvasDialog";
 
-export { VAULT_SYNC_DEBOUNCE_MS } from "./constants";
+export {
+  VAULT_SYNC_DEBOUNCE_MS,
+  VAULT_BROADCAST_CHANNEL,
+} from "./constants";
+
+export {
+  SceneVaultQuotaError,
+  SceneVaultUnavailableError,
+  isQuotaExceededError,
+} from "./vaultErrors";
+
+export {
+  sceneVaultQuotaExceededAtom,
+  sceneVaultListRevisionAtom,
+} from "./vaultState";
+
+export {
+  setVaultOperationContext,
+  getVaultOperationContext,
+  isVaultEditingAllowed,
+  assertVaultEditingAllowed,
+} from "./vaultGuards";
+
+export { notifyVaultChanged, subscribeVaultChanges } from "./vaultTabSync";

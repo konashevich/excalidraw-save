@@ -54,4 +54,10 @@
     gap: 0.5rem;
     margin-bottom: 0.75rem;
   }
+
+  .scene-vault-dialog__error {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    margin: 0 0 0.75rem;
+  }
 }

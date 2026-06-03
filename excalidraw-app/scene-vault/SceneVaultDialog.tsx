@@ -6,9 +6,20 @@ import ConfirmDialog from "@excalidraw/excalidraw/components/ConfirmDialog";
 
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
+import { useAtomValue } from "../app-jotai";
+
 import { sceneVaultService } from "./SceneVaultService";
 import { sceneVaultStore } from "./SceneVaultStore";
 import type { VaultSceneMeta } from "./types";
+import {
+  SceneVaultQuotaError,
+  SceneVaultUnavailableError,
+} from "./vaultErrors";
+import {
+  sceneVaultListRevisionAtom,
+  sceneVaultQuotaExceededAtom,
+} from "./vaultState";
+import { subscribeVaultChanges } from "./vaultTabSync";
 
 import "./SceneVaultDialog.scss";
 
@@ -38,6 +49,9 @@ export const SceneVaultDialog = ({
   const [scenes, setScenes] = useState<VaultSceneMeta[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<VaultSceneMeta | null>(null);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const vaultQuotaExceeded = useAtomValue(sceneVaultQuotaExceededAtom);
+  const listRevision = useAtomValue(sceneVaultListRevisionAtom);
 
   const refreshList = useCallback(async () => {
     const list = await sceneVaultStore.listScenes();
@@ -46,18 +60,39 @@ export const SceneVaultDialog = ({
 
   useEffect(() => {
     if (isOpen) {
-      void refreshList();
+      setActionError(null);
+      void sceneVaultStore.repairVaultIndex().then(() => refreshList());
     }
-  }, [isOpen, refreshList, activeSceneId]);
+  }, [isOpen, refreshList, activeSceneId, listRevision]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    return subscribeVaultChanges(() => {
+      void refreshList();
+      onScenesChange();
+    });
+  }, [isOpen, refreshList, onScenesChange]);
 
   const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
+    setActionError(null);
     try {
       await action();
       await refreshList();
       onScenesChange();
     } catch (error) {
       console.error("[scene-vault]", error);
+      if (error instanceof SceneVaultQuotaError) {
+        setActionError(
+          "Storage is full. Delete or download scenes to free space.",
+        );
+      } else if (error instanceof SceneVaultUnavailableError) {
+        setActionError(error.message);
+      } else if (error instanceof Error) {
+        setActionError(error.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -75,6 +110,13 @@ export const SceneVaultDialog = ({
         title="My scenes"
         size="small"
       >
+        {(vaultQuotaExceeded || actionError) && (
+          <p className="scene-vault-dialog__error" role="alert">
+            {actionError ??
+              "Storage is full. Delete or download scenes to free space."}
+          </p>
+        )}
+
         <div className="scene-vault-dialog__header-actions">
           <DialogActionButton
             label="New canvas"

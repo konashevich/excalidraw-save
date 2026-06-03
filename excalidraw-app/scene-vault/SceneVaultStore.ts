@@ -1,4 +1,4 @@
-import { createStore, del, get, set } from "idb-keyval";
+import { createStore, del, get, keys } from "idb-keyval";
 
 import type { UseStore } from "idb-keyval";
 
@@ -16,6 +16,8 @@ import type {
   VaultSceneMeta,
   VaultScenePayload,
 } from "./types";
+import { idbSet } from "./idbWrite";
+import { notifyVaultChanged } from "./vaultTabSync";
 import {
   countNonDeletedElements,
   defaultSceneTitle,
@@ -75,14 +77,41 @@ export class SceneVaultStore {
       elementCount: countNonDeletedElements(scene.payload.elements),
     };
 
-    await set(sceneStorageKey(normalized.id), normalized, this.store);
+    const sceneKey = sceneStorageKey(normalized.id);
+    await idbSet(sceneKey, normalized, this.store);
 
     const index = await get<VaultSceneMeta[]>(VAULT_INDEX_KEY, this.store);
     const nextIndex = sortMetaByUpdatedAtDesc([
       ...(index ?? []).filter((entry) => entry.id !== normalized.id),
       metaFromScene(normalized),
     ]);
-    await set(VAULT_INDEX_KEY, nextIndex, this.store);
+
+    try {
+      await idbSet(VAULT_INDEX_KEY, nextIndex, this.store);
+    } catch (error) {
+      await del(sceneKey, this.store);
+      throw error;
+    }
+    notifyVaultChanged();
+  }
+
+  /** Rebuild list metadata from stored scene blobs (heals index drift). */
+  async repairVaultIndex(): Promise<void> {
+    const allKeys = await keys(this.store);
+    const metas: VaultSceneMeta[] = [];
+
+    for (const key of allKeys) {
+      if (typeof key !== "string" || !key.startsWith("scene:")) {
+        continue;
+      }
+      const scene = await get<VaultScene>(key, this.store);
+      if (scene) {
+        metas.push(metaFromScene(scene));
+      }
+    }
+
+    await idbSet(VAULT_INDEX_KEY, sortMetaByUpdatedAtDesc(metas), this.store);
+    notifyVaultChanged();
   }
 
   async createScene(input: VaultSceneInput): Promise<VaultScene> {
@@ -96,7 +125,7 @@ export class SceneVaultStore {
 
     const index = await get<VaultSceneMeta[]>(VAULT_INDEX_KEY, this.store);
     if (index?.length) {
-      await set(
+      await idbSet(
         VAULT_INDEX_KEY,
         index.filter((entry) => entry.id !== id),
         this.store,
@@ -107,6 +136,7 @@ export class SceneVaultStore {
     if (activeId === id) {
       await this.setActiveSceneId(null);
     }
+    notifyVaultChanged();
   }
 
   async getActiveSceneId(): Promise<string | null> {
@@ -115,7 +145,8 @@ export class SceneVaultStore {
   }
 
   async setActiveSceneId(id: string | null): Promise<void> {
-    await set(VAULT_ACTIVE_SCENE_ID_KEY, id, this.store);
+    await idbSet(VAULT_ACTIVE_SCENE_ID_KEY, id, this.store);
+    notifyVaultChanged();
   }
 
   async isLegacyMigrated(): Promise<boolean> {
@@ -123,7 +154,7 @@ export class SceneVaultStore {
   }
 
   async setLegacyMigrated(): Promise<void> {
-    await set(VAULT_LEGACY_MIGRATED_KEY, true, this.store);
+    await idbSet(VAULT_LEGACY_MIGRATED_KEY, true, this.store);
   }
 
   async upsertScenePayload(

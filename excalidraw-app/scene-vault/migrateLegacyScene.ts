@@ -87,15 +87,10 @@ export const migrateLegacySceneIfNeeded = async (
   }
 };
 
-/** Run migration after the initial scene (and images) have had time to load. */
-export const migrateLegacySceneAfterInitialLoad = async (
+/**
+ * Call once after initial scene images are loaded (see App `loadImages`).
+ * No-op if migration already completed.
+ */
+export const migrateLegacySceneAfterImagesLoaded = async (
   store: SceneVaultStore = sceneVaultStore,
-): Promise<VaultScene | null> => {
-  if (!isSceneVaultEnabled()) {
-    return null;
-  }
-  if (await store.isLegacyMigrated()) {
-    return null;
-  }
-  return migrateLegacySceneIfNeeded(store);
-};
+): Promise<VaultScene | null> => migrateLegacySceneIfNeeded(store);
