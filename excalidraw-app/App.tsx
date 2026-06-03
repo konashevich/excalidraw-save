@@ -142,6 +142,10 @@ import DebugCanvas, {
 } from "./components/DebugCanvas";
 import { AIComponents } from "./components/AI";
 import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
+import {
+  isSceneVaultEnabled,
+  migrateLegacySceneIfNeeded,
+} from "./scene-vault";
 
 import "./index.scss";
 
@@ -402,6 +406,13 @@ const ExcalidrawWrapper = () => {
     setTimeout(() => {
       trackEvent("load", "version", getVersion());
     }, VERSION_TIMEOUT);
+  }, []);
+
+  useEffect(() => {
+    if (!isSceneVaultEnabled()) {
+      return;
+    }
+    void migrateLegacySceneIfNeeded();
   }, []);
 
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);

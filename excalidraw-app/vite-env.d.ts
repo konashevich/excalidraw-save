@@ -38,6 +38,9 @@ interface ImportMetaEnv {
 
   VITE_APP_GIT_SHA: string;
 
+  /** Enable local multi-canvas scene vault (excalidraw-save fork). Must be "true". */
+  VITE_APP_SCENE_VAULT: string;
+
   MODE: string;
 
   DEV: string;

@@ -49,6 +49,39 @@
   </figure>
 </div>
 
+## excalidraw-save (this fork)
+
+This repository is maintained at [konashevich/excalidraw-save](https://github.com/konashevich/excalidraw-save) as a fork of [Excalidraw](https://github.com/excalidraw/excalidraw) focused on **local, browser-only multi-canvas storage** (“scene vault”) so reset/new does not permanently lose drawings.
+
+- **Design & roadmap:** [docs/scene-vault-design.md](./docs/scene-vault-design.md)
+- **Feature flag:** `VITE_APP_SCENE_VAULT=true` (see [Development](#development-excalidraw-save))
+
+Upstream docs still apply for general development: [Development Guide](https://docs.excalidraw.com/docs/introduction/development).
+
+### Development (excalidraw-save)
+
+```bash
+yarn install
+yarn start
+```
+
+If `yarn install` fails with `ENOSPC` (full disk on `/tmp` or home), use a writable temp and cache directory:
+
+```bash
+mkdir -p /path/to/writable/tmp
+TMPDIR=/path/to/writable/tmp YARN_CACHE_FOLDER=/path/to/writable/.yarn-cache yarn install
+```
+
+Open the URL printed by Vite (default port from `VITE_APP_PORT` in `.env.development`, often `3001`).
+
+To work on the scene vault while it is being implemented, enable the flag in `.env.development.local` (not committed):
+
+```bash
+VITE_APP_SCENE_VAULT=true
+```
+
+When the flag is `false`, the app behaves like upstream Excalidraw.
+
 ## Features
 
 The Excalidraw editor (npm package) supports:
