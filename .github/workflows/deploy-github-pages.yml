@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@49933ea5288caeca8642d34e84af2896b4f7a178 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: yarn
@@ -36,7 +36,7 @@ jobs:
         run: cp excalidraw-app/build/index.html excalidraw-app/build/404.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@56afc609e74203658a474abb16af2bc7e1eb5edd # v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: excalidraw-app/build
 
@@ -49,4 +49,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b4aed7e9abb843e3c2f03b # v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
