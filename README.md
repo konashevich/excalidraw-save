@@ -62,7 +62,7 @@ Upstream docs still apply for general development: [Development Guide](https://d
 
 Live app: **[https://konashevich.github.io/excalidraw-save/](https://konashevich.github.io/excalidraw-save/)**
 
-Pushes to `master` deploy automatically via [`.github/workflows/deploy-github-pages.yml`](.github/workflows/deploy-github-pages.yml). Scene vault is on in production; drawings stay in your browser (IndexedDB / localStorage).
+Pushes to `master` deploy automatically via [`.github/workflows/deploy-github-pages.yml`](.github/workflows/deploy-github-pages.yml). Details: [docs/github-pages-hosting.md](docs/github-pages-hosting.md). Scene vault is on in production; drawings stay in your browser (IndexedDB / localStorage).
 
 Shape libraries, share links, and collaboration still use Excalidraw’s public services (see `.env.production`) — no extra API keys for GitHub Pages.
 
