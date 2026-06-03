@@ -26,11 +26,28 @@ export {
   buildVaultScene,
 } from "./SceneVaultStore";
 
-export { captureSceneFromAPI, isAPISceneNonEmpty } from "./sceneCapture";
+export {
+  captureSceneFromAPI,
+  captureSceneFromAPICloned,
+  isAPISceneNonEmpty,
+} from "./sceneCapture";
+
+export { cloneVaultPayload } from "./clonePayload";
 
 export {
   serializeVaultSceneForDownload,
   downloadVaultSceneAsFile,
 } from "./sceneExport";
 
-export { migrateLegacySceneIfNeeded } from "./migrateLegacyScene";
+export {
+  migrateLegacySceneIfNeeded,
+  migrateLegacySceneAfterInitialLoad,
+} from "./migrateLegacyScene";
+
+export { SceneVaultService, sceneVaultService } from "./SceneVaultService";
+
+export { scheduleVaultSync, flushVaultSync } from "./vaultSync";
+
+export { SceneVaultDialog } from "./SceneVaultDialog";
+
+export { VAULT_SYNC_DEBOUNCE_MS } from "./constants";

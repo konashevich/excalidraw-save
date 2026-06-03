@@ -17,3 +17,6 @@ export const VAULT_ACTIVE_SCENE_ID_KEY = "vault:activeSceneId";
 export const VAULT_LEGACY_MIGRATED_KEY = "vault:legacyMigrated";
 
 export const sceneStorageKey = (id: string): string => `scene:${id}`;
+
+/** Debounced sync of the active canvas into the vault (ms). */
+export const VAULT_SYNC_DEBOUNCE_MS = 1500;

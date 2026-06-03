@@ -22,6 +22,9 @@ export const AppMainMenu: React.FC<{
   theme: Theme | "system";
   setTheme: (theme: Theme | "system") => void;
   refresh: () => void;
+  sceneVaultEnabled?: boolean;
+  onOpenSceneVault?: () => void;
+  onNewCanvas?: () => void;
 }> = React.memo((props) => {
   return (
     <MainMenu>
@@ -29,6 +32,14 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.SaveToActiveFile />
       <MainMenu.DefaultItems.Export />
       <MainMenu.DefaultItems.SaveAsImage />
+      {props.sceneVaultEnabled && (
+        <>
+          <MainMenu.Item onSelect={props.onOpenSceneVault}>
+            My scenes
+          </MainMenu.Item>
+          <MainMenu.Item onSelect={props.onNewCanvas}>New canvas</MainMenu.Item>
+        </>
+      )}
       {props.isCollabEnabled && (
         <MainMenu.DefaultItems.LiveCollaborationTrigger
           isCollaborating={props.isCollaborating}
@@ -38,7 +49,7 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.CommandPalette className="highlighted" />
       <MainMenu.DefaultItems.SearchMenu />
       <MainMenu.DefaultItems.Help />
-      <MainMenu.DefaultItems.ClearCanvas />
+      {!props.sceneVaultEnabled && <MainMenu.DefaultItems.ClearCanvas />}
       <MainMenu.Separator />
       <MainMenu.ItemLink
         icon={ExcalLogo}

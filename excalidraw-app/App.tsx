@@ -143,8 +143,13 @@ import DebugCanvas, {
 import { AIComponents } from "./components/AI";
 import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
 import {
+  SceneVaultDialog,
+  flushVaultSync,
   isSceneVaultEnabled,
-  migrateLegacySceneIfNeeded,
+  migrateLegacySceneAfterInitialLoad,
+  sceneVaultService,
+  sceneVaultStore,
+  scheduleVaultSync,
 } from "./scene-vault";
 
 import "./index.scss";
@@ -408,12 +413,11 @@ const ExcalidrawWrapper = () => {
     }, VERSION_TIMEOUT);
   }, []);
 
-  useEffect(() => {
-    if (!isSceneVaultEnabled()) {
-      return;
-    }
-    void migrateLegacySceneIfNeeded();
-  }, []);
+  const [sceneVaultDialogOpen, setSceneVaultDialogOpen] = useState(false);
+  const [activeVaultSceneId, setActiveVaultSceneId] = useState<string | null>(
+    null,
+  );
+  const [initialSceneReady, setInitialSceneReady] = useState(false);
 
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);
   const [collabAPI] = useAtom(collabAPIAtom);
@@ -421,6 +425,16 @@ const ExcalidrawWrapper = () => {
     return isCollaborationLink(window.location.href);
   });
   const collabError = useAtomValue(collabErrorIndicatorAtom);
+
+  const sceneVaultEnabled =
+    isSceneVaultEnabled() && !isCollabDisabled && !isCollaborating;
+
+  const refreshActiveVaultSceneId = useCallback(() => {
+    if (!isSceneVaultEnabled()) {
+      return;
+    }
+    void sceneVaultStore.getActiveSceneId().then(setActiveVaultSceneId);
+  }, []);
 
   useHandleLibrary({
     excalidrawAPI,
@@ -539,6 +553,7 @@ const ExcalidrawWrapper = () => {
     initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
       loadImages(data, /* isInitialLoad */ true);
       initialStatePromiseRef.current.promise.resolve(data.scene);
+      setInitialSceneReady(true);
     });
 
     const onHashChange = async (event: HashChangeEvent) => {
@@ -629,6 +644,9 @@ const ExcalidrawWrapper = () => {
 
     const onUnload = () => {
       LocalData.flushSave();
+      if (isSceneVaultEnabled() && excalidrawAPI) {
+        flushVaultSync();
+      }
     };
 
     const visibilityChange = (event: FocusEvent | Event) => {
@@ -662,8 +680,20 @@ const ExcalidrawWrapper = () => {
   }, [isCollabDisabled, collabAPI, excalidrawAPI, setLangCode, loadImages]);
 
   useEffect(() => {
+    if (!excalidrawAPI || !initialSceneReady || !isSceneVaultEnabled()) {
+      return;
+    }
+    void migrateLegacySceneAfterInitialLoad().then(() => {
+      refreshActiveVaultSceneId();
+    });
+  }, [excalidrawAPI, initialSceneReady, refreshActiveVaultSceneId]);
+
+  useEffect(() => {
     const unloadHandler = (event: BeforeUnloadEvent) => {
       LocalData.flushSave();
+      if (isSceneVaultEnabled() && excalidrawAPI) {
+        flushVaultSync();
+      }
 
       if (
         excalidrawAPI &&
@@ -697,6 +727,14 @@ const ExcalidrawWrapper = () => {
 
     // this check is redundant, but since this is a hot path, it's best
     // not to evaludate the nested expression every time
+    if (
+      sceneVaultEnabled &&
+      excalidrawAPI &&
+      !LocalData.isSavePaused()
+    ) {
+      scheduleVaultSync(excalidrawAPI);
+    }
+
     if (!LocalData.isSavePaused()) {
       LocalData.save(elements, appState, files, () => {
         if (excalidrawAPI) {
@@ -927,6 +965,7 @@ const ExcalidrawWrapper = () => {
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
           canvasActions: {
+            clearCanvas: !sceneVaultEnabled,
             toggleTheme: true,
             export: {
               onExportToBackend,
@@ -1001,6 +1040,15 @@ const ExcalidrawWrapper = () => {
           theme={appTheme}
           setTheme={(theme) => setAppTheme(theme)}
           refresh={() => forceRefresh((prev) => !prev)}
+          sceneVaultEnabled={sceneVaultEnabled}
+          onOpenSceneVault={() => setSceneVaultDialogOpen(true)}
+          onNewCanvas={() => {
+            if (excalidrawAPI) {
+              void sceneVaultService.newCanvas(excalidrawAPI).then(() => {
+                refreshActiveVaultSceneId();
+              });
+            }
+          }}
         />
         <AppWelcomeScreen
           onCollabDialogOpen={onCollabDialogOpen}
@@ -1045,6 +1093,15 @@ const ExcalidrawWrapper = () => {
             link={latestShareableLink}
             onCloseRequest={() => setLatestShareableLink(null)}
             setErrorMessage={setErrorMessage}
+          />
+        )}
+        {excalidrawAPI && sceneVaultEnabled && (
+          <SceneVaultDialog
+            isOpen={sceneVaultDialogOpen}
+            onClose={() => setSceneVaultDialogOpen(false)}
+            excalidrawAPI={excalidrawAPI}
+            activeSceneId={activeVaultSceneId}
+            onScenesChange={refreshActiveVaultSceneId}
           />
         )}
         {excalidrawAPI && !isCollabDisabled && (

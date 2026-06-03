@@ -54,6 +54,22 @@ describe("migrateLegacySceneIfNeeded", () => {
     expect(await store.listScenes()).toHaveLength(1);
   });
 
+  it("does not mark migrated when persistence fails", async () => {
+    localStorage.setItem(
+      STORAGE_KEYS.LOCAL_STORAGE_ELEMENTS,
+      JSON.stringify([{ ...rectangleFixture, id: "legacy-rect" }]),
+    );
+
+    const createSpy = vi
+      .spyOn(store, "createScene")
+      .mockRejectedValueOnce(new Error("idb error"));
+
+    const result = await migrateLegacySceneIfNeeded(store);
+    expect(result).toBeNull();
+    expect(await store.isLegacyMigrated()).toBe(false);
+    createSpy.mockRestore();
+  });
+
   it("marks migrated when localStorage scene is empty", async () => {
     const result = await migrateLegacySceneIfNeeded(store);
     expect(result).toBeNull();

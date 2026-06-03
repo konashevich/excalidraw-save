@@ -83,7 +83,19 @@ export const migrateLegacySceneIfNeeded = async (
     return scene;
   } catch (error) {
     console.error("[scene-vault] legacy migration failed:", error);
-    await store.setLegacyMigrated();
     return null;
   }
+};
+
+/** Run migration after the initial scene (and images) have had time to load. */
+export const migrateLegacySceneAfterInitialLoad = async (
+  store: SceneVaultStore = sceneVaultStore,
+): Promise<VaultScene | null> => {
+  if (!isSceneVaultEnabled()) {
+    return null;
+  }
+  if (await store.isLegacyMigrated()) {
+    return null;
+  }
+  return migrateLegacySceneIfNeeded(store);
 };
