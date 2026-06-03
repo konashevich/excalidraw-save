@@ -44,6 +44,11 @@ export {
   migrateLegacySceneAfterImagesLoaded,
 } from "./migrateLegacyScene";
 
+export {
+  SCENE_VAULT_MIGRATION_TOAST_MESSAGE,
+  notifySceneVaultMigrationToast,
+} from "./migrationToast";
+
 export { SceneVaultService, sceneVaultService } from "./SceneVaultService";
 
 export { scheduleVaultSync, flushVaultSync } from "./vaultSync";

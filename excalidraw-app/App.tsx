@@ -147,6 +147,7 @@ import {
   flushVaultSync,
   isSceneVaultEnabled,
   migrateLegacySceneAfterImagesLoaded,
+  notifySceneVaultMigrationToast,
   SceneVaultClearCanvasDialog,
   sceneVaultQuotaExceededAtom,
   sceneVaultService,
@@ -456,10 +457,11 @@ const ExcalidrawWrapper = () => {
       return;
     }
     vaultMigrationRanRef.current = true;
-    void migrateLegacySceneAfterImagesLoaded().then(() => {
+    void migrateLegacySceneAfterImagesLoaded().then((migrated) => {
       refreshActiveVaultSceneId();
+      notifySceneVaultMigrationToast(excalidrawAPI, migrated);
     });
-  }, [refreshActiveVaultSceneId]);
+  }, [refreshActiveVaultSceneId, excalidrawAPI]);
 
   useHandleLibrary({
     excalidrawAPI,
