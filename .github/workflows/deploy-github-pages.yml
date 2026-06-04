@@ -32,10 +32,10 @@ jobs:
       - name: Build app
         run: yarn build:app:docker
         env:
-          VITE_APP_GOOGLE_DRIVE: ${{ secrets.VITE_APP_GOOGLE_DRIVE }}
+          VITE_APP_GOOGLE_DRIVE: ${{ secrets.VITE_APP_GOOGLE_DRIVE || 'true' }}
           VITE_APP_GOOGLE_CLIENT_ID: ${{ secrets.VITE_APP_GOOGLE_CLIENT_ID }}
           VITE_APP_GOOGLE_API_KEY: ${{ secrets.VITE_APP_GOOGLE_API_KEY }}
-          VITE_APP_GOOGLE_DRIVE_FOLDER: ${{ secrets.VITE_APP_GOOGLE_DRIVE_FOLDER }}
+          VITE_APP_GOOGLE_DRIVE_FOLDER: ${{ secrets.VITE_APP_GOOGLE_DRIVE_FOLDER || 'diagrams.free' }}
 
       - name: Add SPA fallback for deep links
         run: cp excalidraw-app/build/index.html excalidraw-app/build/404.html

@@ -135,8 +135,10 @@ import {
   GITHUB_REPO,
   isAIBackendEnabled,
   isCollabBackendEnabled,
+  isGoogleDriveShareEnabled,
   isOfficialShareBackendEnabled,
 } from "./branding/constants";
+import { driveShareService, parseShareFileIdFromLocation } from "./google-drive";
 import {
   SceneVaultDialog,
   flushVaultSync,
@@ -220,20 +222,33 @@ const shareableLinkConfirmDialog = {
   color: "danger",
 } as const;
 
+type InitializeSceneResult = { scene: ExcalidrawInitialDataState | null } & (
+  | {
+      isExternalScene: true;
+      id: string;
+      key: string;
+      externalSource: "json" | "firebase";
+      files?: BinaryFiles;
+    }
+  | {
+      isExternalScene: true;
+      driveFileId: string;
+      externalSource: "drive-share";
+      files?: BinaryFiles;
+    }
+  | { isExternalScene: false; id?: null; key?: null }
+);
+
 const initializeScene = async (opts: {
   collabAPI: CollabAPI | null;
   excalidrawAPI: ExcalidrawImperativeAPI;
-}): Promise<
-  { scene: ExcalidrawInitialDataState | null } & (
-    | { isExternalScene: true; id: string; key: string }
-    | { isExternalScene: false; id?: null; key?: null }
-  )
-> => {
+}): Promise<InitializeSceneResult> => {
   const searchParams = new URLSearchParams(window.location.search);
   const id = searchParams.get("id");
   const jsonBackendMatch = window.location.hash.match(
     /^#json=([a-zA-Z0-9_-]+),([a-zA-Z0-9_-]+)$/,
   );
+  const driveShareFileId = parseShareFileIdFromLocation(window.location.href);
   const externalUrlMatch = window.location.hash.match(/^#url=(.*)$/);
 
   const localDataState = importFromLocalStorage();
@@ -254,7 +269,12 @@ const initializeScene = async (opts: {
   };
 
   let roomLinkData = getCollaborationLinkData(window.location.href);
-  const isExternalScene = !!(id || jsonBackendMatch || roomLinkData);
+  const isExternalScene = !!(
+    id ||
+    jsonBackendMatch ||
+    roomLinkData ||
+    driveShareFileId
+  );
   if (isExternalScene) {
     if (
       // don't prompt if scene is empty
@@ -264,6 +284,42 @@ const initializeScene = async (opts: {
       // otherwise, prompt whether user wants to override current scene
       (await openConfirmModal(shareableLinkConfirmDialog))
     ) {
+      if (driveShareFileId) {
+        try {
+          const imported = await driveShareService.loadSharedScene(
+            driveShareFileId,
+          );
+          scene = {
+            elements: restoreElements(imported.elements, null, {
+              repairBindings: true,
+              deleteInvisibleElements: true,
+            }),
+            appState: restoreAppState(imported.appState, localDataState?.appState),
+          };
+          scene.scrollToContent = true;
+          window.history.replaceState({}, APP_NAME, window.location.pathname);
+          return {
+            scene,
+            isExternalScene: true,
+            driveFileId: driveShareFileId,
+            externalSource: "drive-share",
+            files: imported.files,
+          };
+        } catch (error: any) {
+          return {
+            scene: {
+              appState: {
+                errorMessage:
+                  error?.message ||
+                  "Could not open this shared drawing.",
+              },
+            },
+            isExternalScene: true,
+            driveFileId: driveShareFileId,
+            externalSource: "drive-share",
+          };
+        }
+      }
       if (jsonBackendMatch) {
         const imported = await importFromBackend(
           jsonBackendMatch[1],
@@ -364,6 +420,7 @@ const initializeScene = async (opts: {
       isExternalScene: true,
       id: roomLinkData.roomId,
       key: roomLinkData.roomKey,
+      externalSource: "firebase",
     };
   } else if (scene) {
     return isExternalScene && jsonBackendMatch
@@ -372,6 +429,7 @@ const initializeScene = async (opts: {
           isExternalScene,
           id: jsonBackendMatch[1],
           key: jsonBackendMatch[2],
+          externalSource: "json",
         }
       : { scene, isExternalScene: false };
   }
@@ -385,6 +443,8 @@ const ExcalidrawWrapper = () => {
   const isCollabDisabled =
     isRunningInIframe() || !isCollabBackendEnabled();
   const isShareBackendEnabled = isOfficialShareBackendEnabled();
+  const isDriveShareEnabled = isGoogleDriveShareEnabled();
+  const showShareDialog = isDriveShareEnabled || isShareBackendEnabled;
 
   const { editorTheme, appTheme, setAppTheme } = useHandleAppTheme();
 
@@ -517,15 +577,33 @@ const ExcalidrawWrapper = () => {
             return acc;
           }, [] as FileId[]) || [];
 
-        if (data.isExternalScene) {
+        if (
+          data.isExternalScene &&
+          data.externalSource === "drive-share" &&
+          data.files
+        ) {
+          const loadedFiles = Object.values(data.files);
+          if (loadedFiles.length) {
+            excalidrawAPI.addFiles(loadedFiles);
+            updateStaleImageStatuses({
+              excalidrawAPI,
+              erroredFiles: new Map(),
+              elements: excalidrawAPI.getSceneElementsIncludingDeleted(),
+            });
+          }
+        } else if (
+          data.isExternalScene &&
+          (data.externalSource === "json" || data.externalSource === "firebase")
+        ) {
           if (fileIds.length) {
-            // Direct Firebase call (not through FileManager), so track manually
             FileStatusStore.updateStatuses(
               fileIds.map((id) => [id, "loading"]),
             );
           }
           loadFilesFromFirebase(
-            `${FIREBASE_STORAGE_PREFIXES.shareLinkFiles}/${data.id}`,
+            data.externalSource === "firebase"
+              ? `files/rooms/${data.id}`
+              : `${FIREBASE_STORAGE_PREFIXES.shareLinkFiles}/${data.id}`,
             data.key,
             fileIds,
           ).then(({ loadedFiles, erroredFiles }) => {
@@ -956,9 +1034,10 @@ const ExcalidrawWrapper = () => {
             clearCanvas: !sceneVaultEnabled,
             toggleTheme: true,
             export: {
-              onExportToBackend: isShareBackendEnabled
-                ? onExportToBackend
-                : undefined,
+              onExportToBackend:
+                isShareBackendEnabled && !isDriveShareEnabled
+                  ? onExportToBackend
+                  : undefined,
             },
           },
         }}
@@ -969,7 +1048,26 @@ const ExcalidrawWrapper = () => {
         autoFocus={true}
         theme={editorTheme}
         renderTopRightUI={(isMobile) => {
-          if (isMobile || !collabAPI || isCollabDisabled) {
+          if (isMobile) {
+            return null;
+          }
+          if (isCollabDisabled && !isDriveShareEnabled) {
+            return null;
+          }
+          if (isCollabDisabled && isDriveShareEnabled) {
+            return (
+              <div className="excalidraw-ui-top-right">
+                <LiveCollaborationTrigger
+                  isCollaborating={false}
+                  onSelect={() =>
+                    setShareDialogState({ isOpen: true, type: "share" })
+                  }
+                  editorInterface={editorInterface}
+                />
+              </div>
+            );
+          }
+          if (!collabAPI) {
             return null;
           }
 
@@ -1069,22 +1167,38 @@ const ExcalidrawWrapper = () => {
           <Collab excalidrawAPI={excalidrawAPI} />
         )}
 
-        {!isCollabDisabled && isShareBackendEnabled && (
+        {showShareDialog && (
           <ShareDialog
-            collabAPI={collabAPI}
-            onExportToBackend={async () => {
-              if (excalidrawAPI) {
-                try {
-                  await onExportToBackend(
-                    excalidrawAPI.getSceneElements(),
-                    excalidrawAPI.getAppState(),
-                    excalidrawAPI.getFiles(),
-                  );
-                } catch (error: any) {
-                  setErrorMessage(error.message);
-                }
-              }
-            }}
+            collabAPI={isCollabDisabled ? null : collabAPI}
+            isDriveShareEnabled={isDriveShareEnabled}
+            onExportToBackend={
+              isShareBackendEnabled
+                ? async () => {
+                    if (excalidrawAPI) {
+                      try {
+                        await onExportToBackend(
+                          excalidrawAPI.getSceneElements(),
+                          excalidrawAPI.getAppState(),
+                          excalidrawAPI.getFiles(),
+                        );
+                      } catch (error: any) {
+                        setErrorMessage(error.message);
+                      }
+                    }
+                  }
+                : undefined
+            }
+            onCreateDriveShareLink={
+              isDriveShareEnabled && excalidrawAPI
+                ? async (permission) => {
+                    const result = await driveShareService.createShareLink(
+                      excalidrawAPI,
+                      permission,
+                    );
+                    setLatestShareableLink(result.url);
+                  }
+                : undefined
+            }
           />
         )}
 
@@ -1143,7 +1257,7 @@ const ExcalidrawWrapper = () => {
                     },
                   },
                 ]),
-            ...(isShareBackendEnabled
+            ...(showShareDialog
               ? [
                   {
                     label: t("labels.share"),

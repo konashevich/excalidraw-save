@@ -2,6 +2,8 @@ import { debounce } from "@excalidraw/common";
 
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
+import { scheduleDriveVaultSync } from "../google-drive/driveVaultSync";
+
 import { isSceneVaultEnabled, VAULT_SYNC_DEBOUNCE_MS } from "./constants";
 import { sceneVaultService } from "./SceneVaultService";
 import { isVaultEditingAllowed } from "./vaultGuards";
@@ -21,6 +23,7 @@ export const scheduleVaultSync = (api: ExcalidrawImperativeAPI): void => {
     return;
   }
   debouncedSync(api);
+  scheduleDriveVaultSync();
 };
 
 /** Flush pending debounced sync; run an immediate sync if none was pending. */

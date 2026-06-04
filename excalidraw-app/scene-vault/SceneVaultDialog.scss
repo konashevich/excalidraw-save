@@ -158,6 +158,15 @@
     color: var(--color-text-secondary);
   }
 
+  .scene-vault-dialog__drive-autosync {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
   .scene-vault-dialog__drive-actions {
     display: flex;
     flex-wrap: wrap;

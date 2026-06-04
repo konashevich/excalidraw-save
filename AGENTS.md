@@ -60,10 +60,14 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 
 ## Google Drive sync & share (in progress)
 
-**Flag:** `VITE_APP_GOOGLE_DRIVE` (currently `false` in production; Phase 1–2 in repo).
+**Flag:** `VITE_APP_GOOGLE_DRIVE` (`false` in production until GCP secrets + verification).
 
-**Plan:** [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md)  
+**GCP project:** `diagrams-free` · **Console account:** `konashevich@gmail.com` · **Support:** `support@diagrams.free`
+
+**Plan (status + agent playbook):** [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md)  
 **OAuth setup:** [docs/google-oauth-setup.md](docs/google-oauth-setup.md)
+
+**Code today:** `excalidraw-app/google-drive/` — auth, backup/restore (`DriveSyncService`), `GoogleDrivePanel`. **Not yet:** `DriveShareService`, `#share=`, auto-sync, production secrets.
 
 **Concept:**
 
@@ -76,7 +80,7 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 
 Replaces official share/collab (`json.excalidraw.com`, Firebase) which do not work on third-party origins.
 
-Planned code layout: `excalidraw-app/google-drive/` (`auth`, `DriveSyncService`, `DriveShareService`, settings/share UI).
+Implement remaining work per plan §9 (terminal `gcloud` + browser for Console). Do not enable production flag until §12 smoke tests pass on https://diagrams.free.
 
 ---
 
@@ -136,3 +140,8 @@ If `yarn install` fails with `ENOSPC`, set `TMPDIR` and `YARN_CACHE_FOLDER` to a
 | Upstream editor development | [docs.excalidraw.com](https://docs.excalidraw.com/docs/introduction/development) |
 
 Support: [support@diagrams.free](mailto:support@diagrams.free). Issues: [github.com/konashevich/diagrams-free](https://github.com/konashevich/diagrams-free).
+
+
+## Google Console 
+Project ID: diagrams-free
+Number: 658308114676

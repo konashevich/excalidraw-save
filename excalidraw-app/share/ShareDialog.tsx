@@ -20,13 +20,21 @@ import { useEffect, useRef, useState } from "react";
 
 import { atom, useAtom, useAtomValue } from "../app-jotai";
 import { activeRoomLinkAtom } from "../collab/Collab";
+import {
+  isSignedInToGoogle,
+  signInWithGoogle,
+} from "../google-drive";
 
 import "./ShareDialog.scss";
 import { QRCode } from "./QRCode";
 
+import type { DriveSharePermission } from "../google-drive";
 import type { CollabAPI } from "../collab/Collab";
 
-type OnExportToBackend = () => void;
+type OnExportToBackend = () => void | Promise<void>;
+type OnCreateDriveShareLink = (
+  permission: DriveSharePermission,
+) => Promise<void>;
 type ShareDialogType = "share" | "collaborationOnly";
 
 export const shareDialogStateAtom = atom<
@@ -50,7 +58,9 @@ const getShareIcon = () => {
 export type ShareDialogProps = {
   collabAPI: CollabAPI | null;
   handleClose: () => void;
-  onExportToBackend: OnExportToBackend;
+  onExportToBackend?: OnExportToBackend;
+  onCreateDriveShareLink?: OnCreateDriveShareLink;
+  isDriveShareEnabled?: boolean;
   type: ShareDialogType;
 };
 
@@ -178,68 +188,196 @@ const ActiveRoomDialog = ({
   );
 };
 
-const ShareDialogPicker = (props: ShareDialogProps) => {
+const DriveShareSection = ({
+  onCreateDriveShareLink,
+  handleClose,
+  setError,
+}: {
+  onCreateDriveShareLink: OnCreateDriveShareLink;
+  handleClose: () => void;
+  setError: (message: string) => void;
+}) => {
   const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"anyone" | "users">("anyone");
+  const [emails, setEmails] = useState("");
 
-  const { collabAPI } = props;
+  const runShare = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      if (!isSignedInToGoogle()) {
+        await signInWithGoogle();
+      }
+      const permission: DriveSharePermission =
+        mode === "anyone"
+          ? { type: "anyone" }
+          : {
+              type: "users",
+              emails: emails.split(/[\s,;]+/),
+            };
+      await onCreateDriveShareLink(permission);
+      handleClose();
+    } catch (err) {
+      console.error("[google-drive] share", err);
+      setError(err instanceof Error ? err.message : "Could not create link.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  const startCollabJSX = collabAPI ? (
+  return (
     <>
       <div className="ShareDialog__picker__header">
-        {t("labels.liveCollaboration").replace(/\./g, "")}
+        {t("exportDialog.link_title")}
+      </div>
+      <div className="ShareDialog__picker__description">
+        Creates a link on <strong>diagrams.free</strong>. The drawing file is
+        stored in your Google Drive; who can open it is controlled by Google
+        sharing below.
       </div>
 
-      <div className="ShareDialog__picker__description">
-        <div style={{ marginBottom: "1em" }}>{t("roomDialog.desc_intro")}</div>
-        {t("roomDialog.desc_privacy")}
+      <div className="ShareDialog__picker__button ShareDialog__drive-modes">
+        <label className="ShareDialog__drive-mode">
+          <input
+            type="radio"
+            name="drive-share-mode"
+            checked={mode === "anyone"}
+            onChange={() => setMode("anyone")}
+          />
+          Anyone with the link
+        </label>
+        <label className="ShareDialog__drive-mode">
+          <input
+            type="radio"
+            name="drive-share-mode"
+            checked={mode === "users"}
+            onChange={() => setMode("users")}
+          />
+          Specific Google accounts
+        </label>
       </div>
+
+      {mode === "users" ? (
+        <TextField
+          label="Email addresses"
+          placeholder="alice@gmail.com, bob@gmail.com"
+          value={emails}
+          onChange={(value) => setEmails(value)}
+        />
+      ) : null}
 
       <div className="ShareDialog__picker__button">
         <FilledButton
           size="large"
-          label={t("roomDialog.button_startSession")}
-          icon={playerPlayIcon}
-          onClick={() => {
-            trackEvent("share", "room creation", `ui (${getFrame()})`);
-            collabAPI.startCollaboration(null);
-          }}
+          label={t("exportDialog.link_button")}
+          icon={LinkIcon}
+          disabled={busy}
+          onClick={() => void runShare()}
         />
       </div>
+    </>
+  );
+};
 
-      {props.type === "share" && (
+const ShareDialogPicker = (props: ShareDialogProps) => {
+  const { t } = useI18n();
+  const [localError, setLocalError] = useState("");
+
+  const { collabAPI } = props;
+
+  const startCollabJSX =
+    collabAPI && props.type === "share" ? (
+      <>
+        <div className="ShareDialog__picker__header">
+          {t("labels.liveCollaboration").replace(/\./g, "")}
+        </div>
+
+        <div className="ShareDialog__picker__description">
+          <div style={{ marginBottom: "1em" }}>{t("roomDialog.desc_intro")}</div>
+          {t("roomDialog.desc_privacy")}
+        </div>
+
+        <div className="ShareDialog__picker__button">
+          <FilledButton
+            size="large"
+            label={t("roomDialog.button_startSession")}
+            icon={playerPlayIcon}
+            onClick={() => {
+              trackEvent("share", "room creation", `ui (${getFrame()})`);
+              collabAPI.startCollaboration(null);
+            }}
+          />
+        </div>
+
         <div className="ShareDialog__separator">
           <span>{t("shareDialog.or")}</span>
         </div>
-      )}
-    </>
-  ) : null;
+      </>
+    ) : collabAPI ? (
+      <>
+        <div className="ShareDialog__picker__header">
+          {t("labels.liveCollaboration").replace(/\./g, "")}
+        </div>
+        <div className="ShareDialog__picker__description">
+          <div style={{ marginBottom: "1em" }}>{t("roomDialog.desc_intro")}</div>
+          {t("roomDialog.desc_privacy")}
+        </div>
+        <div className="ShareDialog__picker__button">
+          <FilledButton
+            size="large"
+            label={t("roomDialog.button_startSession")}
+            icon={playerPlayIcon}
+            onClick={() => {
+              trackEvent("share", "room creation", `ui (${getFrame()})`);
+              collabAPI.startCollaboration(null);
+            }}
+          />
+        </div>
+      </>
+    ) : null;
+
+  const legacyShareJSX =
+    props.onExportToBackend && !props.isDriveShareEnabled ? (
+      <>
+        <div className="ShareDialog__picker__header">
+          {t("exportDialog.link_title")}
+        </div>
+        <div className="ShareDialog__picker__description">
+          {t("exportDialog.link_details")}
+        </div>
+        <div className="ShareDialog__picker__button">
+          <FilledButton
+            size="large"
+            label={t("exportDialog.link_button")}
+            icon={LinkIcon}
+            onClick={async () => {
+              await props.onExportToBackend?.();
+              props.handleClose();
+            }}
+          />
+        </div>
+      </>
+    ) : null;
+
+  const driveShareJSX =
+    props.isDriveShareEnabled && props.onCreateDriveShareLink ? (
+      <DriveShareSection
+        onCreateDriveShareLink={props.onCreateDriveShareLink}
+        handleClose={props.handleClose}
+        setError={setLocalError}
+      />
+    ) : null;
 
   return (
     <>
       {startCollabJSX}
-
-      {props.type === "share" && (
-        <>
-          <div className="ShareDialog__picker__header">
-            {t("exportDialog.link_title")}
-          </div>
-          <div className="ShareDialog__picker__description">
-            {t("exportDialog.link_details")}
-          </div>
-
-          <div className="ShareDialog__picker__button">
-            <FilledButton
-              size="large"
-              label={t("exportDialog.link_button")}
-              icon={LinkIcon}
-              onClick={async () => {
-                await props.onExportToBackend();
-                props.handleClose();
-              }}
-            />
-          </div>
-        </>
-      )}
+      {localError ? (
+        <p className="ShareDialog__error" role="alert">
+          {localError}
+        </p>
+      ) : null}
+      {props.type === "share" && (driveShareJSX || legacyShareJSX)}
     </>
   );
 };
@@ -266,7 +404,9 @@ const ShareDialogInner = (props: ShareDialogProps) => {
 
 export const ShareDialog = (props: {
   collabAPI: CollabAPI | null;
-  onExportToBackend: OnExportToBackend;
+  onExportToBackend?: OnExportToBackend;
+  onCreateDriveShareLink?: OnCreateDriveShareLink;
+  isDriveShareEnabled?: boolean;
 }) => {
   const [shareDialogState, setShareDialogState] = useAtom(shareDialogStateAtom);
 
@@ -287,6 +427,8 @@ export const ShareDialog = (props: {
       handleClose={() => setShareDialogState({ isOpen: false })}
       collabAPI={props.collabAPI}
       onExportToBackend={props.onExportToBackend}
+      onCreateDriveShareLink={props.onCreateDriveShareLink}
+      isDriveShareEnabled={props.isDriveShareEnabled}
       type={shareDialogState.type}
     />
   );

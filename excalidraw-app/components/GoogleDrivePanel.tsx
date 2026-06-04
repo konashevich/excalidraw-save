@@ -9,8 +9,10 @@ import { flushVaultSync } from "../scene-vault/vaultSync";
 import {
   driveSyncService,
   getGoogleAccountEmail,
+  isDriveAutoSyncEnabled,
   isGoogleDriveEnabled,
   isSignedInToGoogle,
+  setDriveAutoSyncEnabled,
   signInWithGoogle,
   signOutFromGoogle,
 } from "../google-drive";
@@ -42,6 +44,7 @@ export const GoogleDrivePanel = ({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+  const [autoSync, setAutoSync] = useState(isDriveAutoSyncEnabled());
 
   const refreshAccount = useCallback(async () => {
     if (!isSignedInToGoogle()) {
@@ -138,6 +141,22 @@ export const GoogleDrivePanel = ({
       <p className="scene-vault-dialog__drive-meta">
         Last sync: {formatSyncTime(lastSyncAt)}
       </p>
+
+      {signedIn ? (
+        <label className="scene-vault-dialog__drive-autosync">
+          <input
+            type="checkbox"
+            checked={autoSync}
+            disabled={isDisabled}
+            onChange={(event) => {
+              const enabled = event.target.checked;
+              setAutoSync(enabled);
+              setDriveAutoSyncEnabled(enabled);
+            }}
+          />
+          Auto-sync My scenes to Drive after edits
+        </label>
+      ) : null}
 
       <div className="scene-vault-dialog__drive-actions">
         {!signedIn ? (

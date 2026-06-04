@@ -10,6 +10,26 @@
       height: calc(100vh - 5rem);
     }
 
+    &__drive-modes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    &__drive-mode {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    &__error {
+      color: var(--color-danger);
+      margin: 0;
+    }
+
     &__separator {
       border-top: 1px solid var(--dialog-border-color);
       text-align: center;

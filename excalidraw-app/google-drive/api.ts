@@ -5,6 +5,7 @@ import {
   DRIVE_FOLDER_CACHE_KEY,
   DRIVE_MANIFEST_VERSION,
   getDriveRootFolderName,
+  getGoogleApiKey,
 } from "./constants";
 import { DriveApiError } from "./errors";
 import { getAccessToken } from "./auth";
@@ -266,3 +267,51 @@ export const findManifestFileId = async (
   vaultFolderId: string,
 ): Promise<string | null> =>
   findFileInParent(vaultFolderId, DRIVE_MANIFEST_FILENAME);
+
+export const downloadFileTextWithApiKey = async (
+  fileId: string,
+): Promise<string> => {
+  const apiKey = getGoogleApiKey();
+  if (!apiKey) {
+    throw new DriveApiError(
+      "Public share download is not configured (missing API key).",
+      0,
+    );
+  }
+  const url = `${DRIVE_API_BASE}/files/${encodeURIComponent(fileId)}?alt=media&key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new DriveApiError(
+      `Could not download shared file (${response.status}).`,
+      response.status,
+    );
+  }
+  return response.text();
+};
+
+const createPermission = async (
+  fileId: string,
+  body: { type: string; role: string; emailAddress?: string },
+): Promise<void> => {
+  await driveFetch(`/files/${fileId}/permissions`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+};
+
+export const setFilePermissionAnyoneReader = async (
+  fileId: string,
+): Promise<void> => {
+  await createPermission(fileId, { type: "anyone", role: "reader" });
+};
+
+export const setFilePermissionUserReader = async (
+  fileId: string,
+  emailAddress: string,
+): Promise<void> => {
+  await createPermission(fileId, {
+    type: "user",
+    role: "reader",
+    emailAddress,
+  });
+};

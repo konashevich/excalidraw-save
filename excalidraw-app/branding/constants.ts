@@ -28,3 +28,7 @@ export const isAIBackendEnabled = (): boolean =>
 
 export const isOfficialLibraryEnabled = (): boolean =>
   isEnvFeatureEnabled(import.meta.env.VITE_APP_LIBRARY_URL);
+
+export const isGoogleDriveShareEnabled = (): boolean =>
+  import.meta.env.VITE_APP_GOOGLE_DRIVE === "true" &&
+  !!import.meta.env.VITE_APP_GOOGLE_CLIENT_ID?.trim();

@@ -22,6 +22,9 @@ export const DRIVE_TOKEN_STORAGE_KEY = "diagrams-free:google-access-token";
 export const DRIVE_TOKEN_EXPIRY_STORAGE_KEY =
   "diagrams-free:google-access-token-expiry";
 
+/** Default on when signed in; user can disable in vault panel. */
+export const DRIVE_AUTO_SYNC_STORAGE_KEY = "diagrams-free:drive-auto-sync";
+
 export const getDriveRootFolderName = (): string =>
   import.meta.env.VITE_APP_GOOGLE_DRIVE_FOLDER?.trim() ||
   DEFAULT_DRIVE_ROOT_FOLDER;
@@ -29,5 +32,22 @@ export const getDriveRootFolderName = (): string =>
 export const getGoogleClientId = (): string | undefined =>
   import.meta.env.VITE_APP_GOOGLE_CLIENT_ID?.trim() || undefined;
 
+export const getGoogleApiKey = (): string | undefined =>
+  import.meta.env.VITE_APP_GOOGLE_API_KEY?.trim() || undefined;
+
 export const isGoogleDriveEnabled = (): boolean =>
   import.meta.env.VITE_APP_GOOGLE_DRIVE === "true" && !!getGoogleClientId();
+
+export const isDriveAutoSyncEnabled = (): boolean => {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  return localStorage.getItem(DRIVE_AUTO_SYNC_STORAGE_KEY) !== "false";
+};
+
+export const setDriveAutoSyncEnabled = (enabled: boolean): void => {
+  localStorage.setItem(
+    DRIVE_AUTO_SYNC_STORAGE_KEY,
+    enabled ? "true" : "false",
+  );
+};

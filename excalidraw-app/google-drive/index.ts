@@ -2,8 +2,11 @@ export {
   DEFAULT_DRIVE_ROOT_FOLDER,
   DRIVE_FILE_SCOPE,
   getDriveRootFolderName,
+  getGoogleApiKey,
   getGoogleClientId,
+  isDriveAutoSyncEnabled,
   isGoogleDriveEnabled,
+  setDriveAutoSyncEnabled,
 } from "./constants";
 
 export type {
@@ -45,3 +48,23 @@ export {
   driveSyncService,
   isDriveSyncAvailable,
 } from "./DriveSyncService";
+
+export {
+  DriveShareService,
+  driveShareService,
+} from "./DriveShareService";
+export type {
+  DriveSharePermission,
+  DriveShareResult,
+} from "./DriveShareService";
+
+export {
+  buildShareUrl,
+  isDriveShareLink,
+  parseShareFileIdFromLocation,
+} from "./shareLink";
+
+export {
+  scheduleDriveVaultSync,
+  flushDriveVaultSync,
+} from "./driveVaultSync";
