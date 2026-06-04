@@ -432,7 +432,7 @@ const ExcalidrawWrapper = () => {
 
   const sceneVaultEnabled =
     isSceneVaultEnabled() &&
-    !isCollabDisabled &&
+    !isRunningInIframe() &&
     !isCollaborating &&
     !isExternalVaultScene;
 
