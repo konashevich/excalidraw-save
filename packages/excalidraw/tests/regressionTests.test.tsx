@@ -3,6 +3,7 @@ import { vi } from "vitest";
 
 import {
   FONT_FAMILY,
+  DEFAULT_FONT_FAMILY,
   CODES,
   KEYS,
   reseed,
@@ -657,7 +658,7 @@ describe("regression tests", () => {
 
   it("updates fontSize & fontFamily appState", () => {
     UI.clickTool("text");
-    expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY.Excalifont);
+    expect(h.state.currentItemFontFamily).toEqual(DEFAULT_FONT_FAMILY);
     fireEvent.click(screen.getByTitle(/code/i));
     expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY["Comic Shanns"]);
   });

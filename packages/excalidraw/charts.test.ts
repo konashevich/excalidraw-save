@@ -1,4 +1,4 @@
-import { FONT_FAMILY } from "@excalidraw/common";
+import { DEFAULT_FONT_FAMILY, FONT_FAMILY } from "@excalidraw/common";
 import {
   DEFAULT_CHART_COLOR_INDEX,
   getAllColorsSpecificShade,
@@ -1063,7 +1063,7 @@ describe("charts", () => {
       );
       const axisLabels = textElements.filter(
         (element) =>
-          element.fontFamily === FONT_FAMILY.Excalifont &&
+          element.fontFamily === DEFAULT_FONT_FAMILY &&
           element.text !== "Dunk" &&
           element.text !== "Egg",
       );

@@ -3,6 +3,7 @@ import { pointFrom } from "@excalidraw/math";
 import {
   COLOR_PALETTE,
   DEFAULT_CHART_COLOR_INDEX,
+  DEFAULT_FONT_FAMILY,
   FONT_FAMILY,
   FONT_SIZES,
   ROUNDNESS,
@@ -286,7 +287,7 @@ export const createRadarAxisLabels = (
   axisLabelTopY: number;
   axisLabelBottomY: number;
 } => {
-  const fontFamily = FONT_FAMILY.Excalifont;
+  const fontFamily = DEFAULT_FONT_FAMILY;
   const fontSize = FONT_SIZES.sm;
   const lineHeight = getLineHeight(fontFamily);
   const fontString = getFontString({ fontFamily, fontSize });

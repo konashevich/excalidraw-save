@@ -11,6 +11,7 @@ import {
   colorToHex,
   KEYS,
   FONT_FAMILY,
+  DEFAULT_FONT_FAMILY,
   TEXT_ALIGN,
   THEME,
   VERTICAL_ALIGN,
@@ -1096,7 +1097,7 @@ describe("textWysiwyg", () => {
 
       expect(h.state.editingTextElement).toBe(null);
 
-      expect(text.fontFamily).toEqual(FONT_FAMILY.Excalifont);
+      expect(text.fontFamily).toEqual(DEFAULT_FONT_FAMILY);
 
       fireEvent.click(screen.getByTitle(/code/i));
 
@@ -1110,7 +1111,7 @@ describe("textWysiwyg", () => {
       });
       expect(
         (h.elements[1] as ExcalidrawTextElementWithContainer).fontFamily,
-      ).toEqual(FONT_FAMILY.Excalifont);
+      ).toEqual(DEFAULT_FONT_FAMILY);
 
       //redo
       Keyboard.withModifierKeys({ ctrl: true, shift: true }, () => {

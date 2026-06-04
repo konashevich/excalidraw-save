@@ -33,6 +33,14 @@ export interface FontMetadata {
 }
 
 export const FONT_METADATA: Record<number, FontMetadata> = {
+  [FONT_FAMILY["Indie Flower"]]: {
+    metrics: {
+      unitsPerEm: 1024,
+      ascender: 994,
+      descender: -500,
+      lineHeight: 1.25,
+    },
+  },
   [FONT_FAMILY.Excalifont]: {
     metrics: {
       unitsPerEm: 1000,

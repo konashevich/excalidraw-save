@@ -131,7 +131,8 @@ export const FONT_FAMILY = {
   Virgil: 1,
   Helvetica: 2,
   Cascadia: 3,
-  // leave 4 unused as it was historically used for Assistant (which we don't use anymore) or custom font (Obsidian)
+  // historically unused; now diagrams.free default hand-drawn font
+  "Indie Flower": 4,
   Excalifont: 5,
   Nunito: 6,
   "Lilita One": 7,
@@ -176,6 +177,7 @@ export const getFontFamilyFallbacks = (
 
   switch (fontFamily) {
     case FONT_FAMILY.Excalifont:
+    case FONT_FAMILY["Indie Flower"]:
       return [
         CJK_HAND_DRAWN_FALLBACK_FONT,
         genericFallbackFont,
@@ -211,7 +213,8 @@ export const FRAME_STYLE = {
 
 export const MIN_FONT_SIZE = 1;
 export const DEFAULT_FONT_SIZE = 20;
-export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY.Excalifont;
+export const DEFAULT_FONT_FAMILY: FontFamilyValues =
+  FONT_FAMILY["Indie Flower"];
 export const DEFAULT_TEXT_ALIGN = "left";
 export const DEFAULT_VERTICAL_ALIGN = "top";
 export const DEFAULT_VERSION = "{version}";
