@@ -6,9 +6,16 @@ Live site: **[https://diagrams.free](https://diagrams.free)**
 
 This repository ([konashevich/diagrams-free](https://github.com/konashevich/diagrams-free)) is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw) (MIT License). See [NOTICE](./NOTICE) for attribution.
 
-- **Branding & IP clearance:** [docs/diagrams-free-branding-and-ip-clearance.md](./docs/diagrams-free-branding-and-ip-clearance.md)
-- **Scene vault design:** [docs/scene-vault-design.md](./docs/scene-vault-design.md)
-- **Feature flag:** `VITE_APP_SCENE_VAULT=true`
+**Why diagrams.free is different from Excalidraw**
+
+Stock Excalidraw keeps one drawing in the browser. When you reset the canvas or start fresh, that slot is overwritten and the previous work is gone unless you exported it first. **diagrams.free** adds local **scene storage** so your diagrams stay on your device and are easy to find again:
+
+- **Scenes saved in the browser** — each diagram (including embedded images) is stored on your device in IndexedDB and local storage, not only in the single “current” slot.
+- **Reset does not throw your work away** — **New canvas** and **Reset canvas** archive the current drawing into **My scenes**, then give you a clean canvas.
+- **My scenes** — browse saved diagrams, open any of them, rename, duplicate, delete, or download as `.excalidraw` when you need them.
+- **Several diagrams at once** — switch between ideas, versions, or projects without exporting every time or losing the last one.
+- **Import into your library** — add `.excalidraw` files to **My scenes** without replacing what is on the canvas.
+- **Private by default** — vault data stays on your machine; nothing is uploaded unless you export or share it yourself.
 
 ## diagrams-free (this fork)
 
