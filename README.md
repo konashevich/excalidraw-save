@@ -2,16 +2,15 @@
 
 **diagrams.free** — hand-drawn diagrams in your browser.
 
-Live site (in progress): **[https://diagrams.free](https://diagrams.free)**  
-Staging on GitHub Pages: **[https://konashevich.github.io/excalidraw-save/](https://konashevich.github.io/excalidraw-save/)**
+Live site: **[https://diagrams.free](https://diagrams.free)**
 
-This repository ([konashevich/excalidraw-save](https://github.com/konashevich/excalidraw-save)) is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw) (MIT License). See [NOTICE](./NOTICE) for attribution.
+This repository ([konashevich/diagrams-free](https://github.com/konashevich/diagrams-free)) is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw) (MIT License). See [NOTICE](./NOTICE) for attribution.
 
 - **Branding & IP clearance:** [docs/diagrams-free-branding-and-ip-clearance.md](./docs/diagrams-free-branding-and-ip-clearance.md)
 - **Scene vault design:** [docs/scene-vault-design.md](./docs/scene-vault-design.md)
 - **Feature flag:** `VITE_APP_SCENE_VAULT=true`
 
-## excalidraw-save (this fork)
+## diagrams-free (this fork)
 
 This fork adds **local, browser-only multi-canvas storage** (“scene vault”) so reset/new does not permanently lose drawings.
 
@@ -23,7 +22,7 @@ Pushes to `master` deploy automatically via [`.github/workflows/deploy-github-pa
 
 Production builds use **diagrams.free** branding and disable official Excalidraw cloud backends (see `.env.production`). Drawings stay in your browser (IndexedDB / localStorage) unless you explicitly export them.
 
-### Development (excalidraw-save)
+### Development
 
 ```bash
 yarn install

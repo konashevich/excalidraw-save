@@ -5,7 +5,7 @@ export const SITE_URL =
 
 export const GITHUB_REPO =
   import.meta.env.VITE_APP_GITHUB_REPO?.trim() ||
-  "https://github.com/konashevich/excalidraw-save";
+  "https://github.com/konashevich/diagrams-free";
 
 export const UPSTREAM_EXCALIDRAW_URL = "https://github.com/excalidraw/excalidraw";
 

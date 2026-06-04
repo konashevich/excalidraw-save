@@ -22,7 +22,7 @@ const Header = () => (
       className="HelpDialog__btn"
       href={
         import.meta.env.VITE_APP_GITHUB_REPO ||
-        "https://github.com/konashevich/excalidraw-save"
+        "https://github.com/konashevich/diagrams-free"
       }
       target="_blank"
       rel="noopener noreferrer"

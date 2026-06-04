@@ -14,7 +14,7 @@ the copyright notice above in copies or substantial portions of the software.
 ## diagrams.free fork
 
 Additional changes in this repository are maintained at
-[konashevich/excalidraw-save](https://github.com/konashevich/excalidraw-save).
+[konashevich/diagrams-free](https://github.com/konashevich/diagrams-free).
 
 For dependency licenses, refer to each package's `package.json` and the `node_modules` tree
 after installation.
