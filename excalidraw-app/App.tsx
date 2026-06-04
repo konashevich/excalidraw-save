@@ -131,13 +131,11 @@ import DebugCanvas, {
   loadSavedDebugState,
 } from "./components/DebugCanvas";
 import { AIComponents } from "./components/AI";
-import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
 import {
   GITHUB_REPO,
   isAIBackendEnabled,
   isCollabBackendEnabled,
   isOfficialShareBackendEnabled,
-  isPlusEnabled,
 } from "./branding/constants";
 import {
   SceneVaultDialog,
@@ -1223,12 +1221,6 @@ const ExcalidrawWrapper = () => {
 };
 
 const ExcalidrawApp = () => {
-  const isCloudExportWindow =
-    isPlusEnabled() && window.location.pathname === "/excalidraw-plus-export";
-  if (isCloudExportWindow) {
-    return <ExcalidrawPlusIframeExport />;
-  }
-
   return (
     <TopErrorBoundary>
       <Provider store={appJotaiStore}>

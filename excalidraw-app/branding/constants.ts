@@ -17,9 +17,6 @@ const isEnvFeatureEnabled = (value: string | undefined): boolean => {
   return !import.meta.env.PROD;
 };
 
-export const isPlusEnabled = (): boolean =>
-  isEnvFeatureEnabled(import.meta.env.VITE_APP_PLUS_LP);
-
 export const isOfficialShareBackendEnabled = (): boolean =>
   isEnvFeatureEnabled(import.meta.env.VITE_APP_BACKEND_V2_POST_URL);
 
