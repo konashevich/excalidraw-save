@@ -17,6 +17,8 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 import { useAtomValue } from "../app-jotai";
 
+import { GoogleDrivePanel } from "../components/GoogleDrivePanel";
+
 import { sceneVaultService } from "./SceneVaultService";
 import { sceneVaultStore } from "./SceneVaultStore";
 import type { VaultSceneMeta } from "./types";
@@ -317,6 +319,15 @@ export const SceneVaultDialog = ({
             disabled={busy}
           />
         </div>
+
+        <GoogleDrivePanel
+          excalidrawAPI={excalidrawAPI}
+          disabled={busy}
+          onSyncComplete={() => {
+            void refreshList();
+            onScenesChange();
+          }}
+        />
 
         {scenes.length === 0 ? (
           <p className="scene-vault-dialog__empty">

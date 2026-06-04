@@ -44,6 +44,12 @@ interface ImportMetaEnv {
   VITE_APP_SITE_URL: string;
   VITE_APP_GITHUB_REPO: string;
 
+  /** Google Drive vault backup (diagrams-free). Requires client ID. */
+  VITE_APP_GOOGLE_DRIVE: string;
+  VITE_APP_GOOGLE_CLIENT_ID: string;
+  VITE_APP_GOOGLE_API_KEY: string;
+  VITE_APP_GOOGLE_DRIVE_FOLDER: string;
+
   VITE_APP_ENABLE_TRACKING: string;
 
   MODE: string;

@@ -89,6 +89,12 @@ if (isDevEnv()) {
 let currentLang: Language = defaultLang;
 let currentLangData = {};
 let localeOverridesByLang: Record<string, Record<string, unknown>> = {};
+let localePostProcessor:
+  | ((
+      data: Record<string, unknown>,
+      langCode: string,
+    ) => Record<string, unknown>)
+  | null = null;
 
 const deepMerge = (
   target: Record<string, unknown>,
@@ -123,6 +129,18 @@ export const setLocaleOverrides = (
   localeOverridesByLang = overrides;
 };
 
+/** App-level hook (e.g. diagrams.free) to sanitize branding in every loaded locale. */
+export const setLocalePostProcessor = (
+  processor:
+    | ((
+        data: Record<string, unknown>,
+        langCode: string,
+      ) => Record<string, unknown>)
+    | null,
+) => {
+  localePostProcessor = processor;
+};
+
 export const setLanguage = async (lang: Language) => {
   currentLang = lang;
   document.documentElement.dir = currentLang.rtl ? "rtl" : "ltr";
@@ -144,6 +162,13 @@ export const setLanguage = async (lang: Language) => {
     currentLangData = deepMerge(
       currentLangData as Record<string, unknown>,
       overrides,
+    );
+  }
+
+  if (localePostProcessor) {
+    currentLangData = localePostProcessor(
+      currentLangData as Record<string, unknown>,
+      currentLang.code,
     );
   }
 
