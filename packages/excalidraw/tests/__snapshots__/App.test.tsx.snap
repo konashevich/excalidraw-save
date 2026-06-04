@@ -25,7 +25,9 @@ exports[`Test <App/> > should show error modal when using brave and measureText 
   <p>
     We strongly recommend disabling this setting. You can follow 
     <a
-      href="http://docs.excalidraw.com/docs/@excalidraw/excalidraw/faq#turning-off-aggresive-block-fingerprinting-in-brave-browser"
+      href="https://support.brave.com/hc/en-us/articles/360022806212-How-do-I-change-my-Shields-settings"
+      rel="noopener noreferrer"
+      target="_blank"
     >
       these steps
     </a>
@@ -34,16 +36,17 @@ exports[`Test <App/> > should show error modal when using brave and measureText 
   <p>
     If disabling this setting doesn't fix the display of text elements, please open an 
     <a
-      href="https://github.com/excalidraw/excalidraw/issues/new"
+      href="https://github.com/konashevich/diagrams-free/issues"
+      rel="noopener noreferrer"
+      target="_blank"
     >
       issue
     </a>
      on our GitHub, or write us on 
     <a
-      href="https://discord.gg/UexuTaE"
+      href="mailto:support@diagrams.free"
     >
       Discord
-      .
     </a>
   </p>
 </div>

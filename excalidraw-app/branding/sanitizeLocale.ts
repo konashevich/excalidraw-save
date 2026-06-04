@@ -21,6 +21,8 @@ const KEY_PATH_EN_NEUTRAL: Record<string, string> = {
   "overwriteConfirm.action.excalidrawPlus.button": "Export to cloud",
   "overwriteConfirm.action.excalidrawPlus.description":
     "Save the scene to your cloud workspace.",
+  "errors.brave_measure_text_error.line4":
+    "If disabling this setting doesn't fix the display of text elements, please open an <issueLink>issue</issueLink> on GitHub or email <supportLink>support@diagrams.free</supportLink>.",
 };
 
 export const sanitizeBrandString = (value: string): string => {
