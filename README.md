@@ -10,6 +10,7 @@ This repository ([konashevich/diagrams-free](https://github.com/konashevich/diag
 
 Stock Excalidraw keeps one drawing in the browser. When you reset the canvas or start fresh, that slot is overwritten and the previous work is gone unless you exported it first. **diagrams.free** adds local **scene storage** so your diagrams stay on your device and are easy to find again:
 
+- **Fully free (no subscription)** — use the app and scene storage without paying or signing up for a paid tier.
 - **Scenes saved in the browser** — each diagram (including embedded images) is stored on your device in IndexedDB and local storage, not only in the single “current” slot.
 - **Reset does not throw your work away** — **New canvas** and **Reset canvas** archive the current drawing into **My scenes**, then give you a clean canvas.
 - **My scenes** — browse saved diagrams, open any of them, rename, duplicate, delete, or download as `.excalidraw` when you need them.
