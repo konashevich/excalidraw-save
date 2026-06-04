@@ -36,6 +36,12 @@
       color: var(--color-logo-text);
     }
 
+    &.ExcalidrawLogo--with-wordmark {
+      .ExcalidrawLogo-text {
+        margin-left: 0;
+      }
+    }
+
     &.is-mobile {
       .ExcalidrawLogo-icon {
         height: var(--logo-icon--mobile);

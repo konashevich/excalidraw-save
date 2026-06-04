@@ -111,7 +111,7 @@ Center.displayName = "Center";
 
 const Logo = ({ children }: { children?: React.ReactNode }) => {
   return (
-    <div className="welcome-screen-center__logo excalifont welcome-screen-decor">
+    <div className="welcome-screen-center__logo welcome-screen-decor">
       {children || <ExcalidrawLogo withText />}
     </div>
   );

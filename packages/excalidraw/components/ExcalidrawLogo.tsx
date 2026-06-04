@@ -42,10 +42,20 @@ export const ExcalidrawLogo = ({
   size = "small",
   withText,
 }: LogoProps) => {
+  if (withText) {
+    return (
+      <div
+        className={`ExcalidrawLogo ExcalidrawLogo--with-wordmark is-${size}`}
+        style={style}
+      >
+        <Wordmark className="ExcalidrawLogo-text" />
+      </div>
+    );
+  }
+
   return (
     <div className={`ExcalidrawLogo is-${size}`} style={style}>
       <ProductLogoIcon className="ExcalidrawLogo-icon" />
-      {withText && <Wordmark className="ExcalidrawLogo-text" />}
     </div>
   );
 };
