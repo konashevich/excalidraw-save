@@ -1015,6 +1015,8 @@ const ExcalidrawWrapper = () => {
         <AppWelcomeScreen
           onCollabDialogOpen={onCollabDialogOpen}
           isCollabEnabled={!isCollabDisabled}
+          sceneVaultEnabled={sceneVaultEnabled}
+          onOpenSceneVault={() => setSceneVaultDialogOpen(true)}
         />
         <OverwriteConfirmDialog>
           <OverwriteConfirmDialog.Actions.ExportToImage />

@@ -24,9 +24,13 @@
     "tooltip": "Your drawings are end-to-end encrypted so the server will never see them.",
     "link": "Learn more about encryption"
   },
+  "buttons": {
+    "load": "Open local file"
+  },
   "welcomeScreen": {
     "app": {
-      "center_heading_plus": "Did you want to go to your account instead?"
+      "center_heading_plus": "Did you want to go to your account instead?",
+      "openMyScenes": "Open My scenes (saved in browser)"
     }
   },
   "overwriteConfirm": {
