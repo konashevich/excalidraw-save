@@ -220,7 +220,8 @@ export const LibraryDropdownMenuButton: React.FC<{
               {t("buttons.export")}
             </DropdownMenu.Item>
           )}
-          {itemsSelected && (
+          {itemsSelected &&
+            !!import.meta.env.VITE_APP_LIBRARY_BACKEND?.trim() && (
             <DropdownMenu.Item
               icon={publishIcon}
               onSelect={() => setShowPublishLibraryDialog(true)}

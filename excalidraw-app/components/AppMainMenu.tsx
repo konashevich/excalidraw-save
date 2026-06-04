@@ -54,6 +54,7 @@ export const AppMainMenu: React.FC<{
       <MainMenu.ItemLink href={`${SITE_URL}/privacy/`}>
         Privacy
       </MainMenu.ItemLink>
+      <MainMenu.ItemLink href={`${SITE_URL}/terms/`}>Terms</MainMenu.ItemLink>
       {isDevEnv() && (
         <MainMenu.Item
           icon={eyeIcon}
