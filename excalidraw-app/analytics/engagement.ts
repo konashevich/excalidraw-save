@@ -107,3 +107,14 @@ export const trackNewCanvas = (
   }
   trackEngagement("new_canvas", source);
 };
+
+export const trackDonateModalOpen = (source: string) => {
+  trackEngagement("donate_modal_open", source);
+};
+
+export const trackDonateCheckout = (
+  kind: "once" | "monthly",
+  tier: string,
+) => {
+  trackEngagement("donate_checkout", `${kind}_${tier}`);
+};

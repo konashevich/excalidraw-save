@@ -141,10 +141,12 @@ import {
   isAIBackendEnabled,
   isCollabBackendEnabled,
   isContactFormEnabled,
+  isDonateEnabled,
   isGoogleDriveShareEnabled,
   isOfficialShareBackendEnabled,
 } from "./branding/constants";
 import { ContactUsDialog } from "./contact/ContactUsDialog";
+import { DonateModal } from "./donate/DonateModal";
 import { CONTACT_US_OPEN_EVENT } from "./contact/openContactUs";
 import { driveShareService, parseShareFileIdFromLocation } from "./google-drive";
 import {
@@ -486,6 +488,7 @@ const ExcalidrawWrapper = () => {
 
   const [sceneVaultDialogOpen, setSceneVaultDialogOpen] = useState(false);
   const [contactUsDialogOpen, setContactUsDialogOpen] = useState(false);
+  const [donateModalOpen, setDonateModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isContactFormEnabled()) {
@@ -499,6 +502,27 @@ const ExcalidrawWrapper = () => {
     return () => {
       window.removeEventListener(CONTACT_US_OPEN_EVENT, openContactUs);
     };
+  }, [excalidrawAPI]);
+
+  useEffect(() => {
+    if (!excalidrawAPI || !isDonateEnabled()) {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("donate") !== "thanks") {
+      return;
+    }
+    params.delete("donate");
+    const nextSearch = params.toString();
+    const nextUrl =
+      window.location.pathname +
+      (nextSearch ? `?${nextSearch}` : "") +
+      window.location.hash;
+    window.history.replaceState(null, "", nextUrl);
+    excalidrawAPI.setToast({
+      message: "Thank you for supporting diagrams.free!",
+      duration: 5000,
+    });
   }, [excalidrawAPI]);
 
   const [activeVaultSceneId, setActiveVaultSceneId] = useState<string | null>(
@@ -1174,6 +1198,7 @@ const ExcalidrawWrapper = () => {
               }
             });
           }}
+          onOpenDonate={() => setDonateModalOpen(true)}
         />
         <AppWelcomeScreen
           onCollabDialogOpen={onCollabDialogOpen}
@@ -1215,6 +1240,12 @@ const ExcalidrawWrapper = () => {
             link={latestShareableLink}
             onCloseRequest={() => setLatestShareableLink(null)}
             setErrorMessage={setErrorMessage}
+          />
+        )}
+        {isDonateEnabled() && (
+          <DonateModal
+            isOpen={donateModalOpen}
+            onClose={() => setDonateModalOpen(false)}
           />
         )}
         {excalidrawAPI && isContactFormEnabled() && (

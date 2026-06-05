@@ -8,7 +8,12 @@ import { isDevEnv } from "@excalidraw/common";
 import type { Theme } from "@excalidraw/element/types";
 
 import { LanguageList } from "../app-language/LanguageList";
-import { isContactFormEnabled, SITE_URL } from "../branding/constants";
+import {
+  isContactFormEnabled,
+  isDonateEnabled,
+  SITE_URL,
+} from "../branding/constants";
+import { trackDonateModalOpen } from "../analytics/engagement";
 import { openContactUsDialog } from "../contact/openContactUs";
 
 import { saveDebugState } from "./DebugCanvas";
@@ -24,6 +29,7 @@ export const AppMainMenu: React.FC<{
   onOpenSceneVault?: () => void;
   onNewCanvas?: () => void;
   onResetCanvas?: () => void;
+  onOpenDonate?: () => void;
 }> = React.memo((props) => {
   return (
     <MainMenu>
@@ -64,6 +70,16 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.Help />
       {!props.sceneVaultEnabled && <MainMenu.DefaultItems.ClearCanvas />}
       <MainMenu.Separator />
+      {isDonateEnabled() && props.onOpenDonate && (
+        <MainMenu.Item
+          onSelect={() => {
+            trackDonateModalOpen("menu");
+            props.onOpenDonate?.();
+          }}
+        >
+          Support diagrams.free
+        </MainMenu.Item>
+      )}
       {isContactFormEnabled() && (
         <MainMenu.Item onSelect={openContactUsDialog}>
           {t("contactUs.menuItem")}

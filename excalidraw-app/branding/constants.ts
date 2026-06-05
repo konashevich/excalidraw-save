@@ -37,3 +37,5 @@ export const CONTACT_FORM_URL =
   import.meta.env.VITE_APP_CONTACT_FORM_URL?.trim() ?? "";
 
 export const isContactFormEnabled = (): boolean => !!CONTACT_FORM_URL;
+
+export { isDonateEnabled } from "../donate/donateConfig";

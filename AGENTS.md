@@ -143,6 +143,22 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 
 ---
 
+## Stripe donations (optional)
+
+**Plan:** [docs/stripe-donate-plan.md](docs/stripe-donate-plan.md) · **Operator setup:** [docs/stripe-donate-setup.md](docs/stripe-donate-setup.md)
+
+| Item | Location / value |
+|------|------------------|
+| Feature flag | `VITE_APP_DONATE_ENABLED=true` + 8 `VITE_APP_STRIPE_DONATE_*` Payment Link URLs (GitHub Actions secrets on deploy) |
+| UI | `excalidraw-app/donate/` — menu **Support diagrams.free**, two-column modal |
+| Stripe API keys | `docs/stripe/secrets.env` (gitignored) — **local link creation only**; never in client bundle |
+| Create links | `node docs/stripe/create-payment-links.mjs` → `docs/stripe/generated-vite.env` |
+| GitHub secrets | `bash docs/stripe/sync-github-secrets.sh` |
+
+**Agent notes:** Static site uses Payment Link redirects only — no `sk_live` in Vite env. Thank-you return: `https://diagrams.free/?donate=thanks`.
+
+---
+
 ## Hosting & deployment
 
 - **URL:** https://diagrams.free  

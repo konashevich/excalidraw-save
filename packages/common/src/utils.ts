@@ -86,6 +86,9 @@ export const isWritableElement = (
   target instanceof HTMLTextAreaElement ||
   (target instanceof HTMLInputElement &&
     (target.type === "text" ||
+      target.type === "email" ||
+      target.type === "url" ||
+      target.type === "tel" ||
       target.type === "number" ||
       target.type === "password" ||
       target.type === "search")) ||

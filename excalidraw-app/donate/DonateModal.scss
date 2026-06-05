@@ -1,0 +1,36 @@
+.donate-modal {
+  .donate-modal__intro {
+    margin: 0 0 1rem;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .donate-modal__columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 560px) {
+    .donate-modal__columns {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .donate-modal__panel-title {
+    margin: 0 0 0.65rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .donate-modal__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .donate-modal__custom {
+    margin-top: 0.15rem;
+  }
+}
