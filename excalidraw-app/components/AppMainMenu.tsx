@@ -21,6 +21,7 @@ export const AppMainMenu: React.FC<{
   sceneVaultEnabled?: boolean;
   onOpenSceneVault?: () => void;
   onNewCanvas?: () => void;
+  onResetCanvas?: () => void;
 }> = React.memo((props) => {
   return (
     <MainMenu>
@@ -35,6 +36,12 @@ export const AppMainMenu: React.FC<{
           </MainMenu.Item>
           <MainMenu.Item onSelect={props.onNewCanvas}>
             New canvas (save and reset)
+          </MainMenu.Item>
+          <MainMenu.Item
+            onSelect={props.onResetCanvas}
+            title="Delete current scene"
+          >
+            Reset canvas
           </MainMenu.Item>
         </>
       )}

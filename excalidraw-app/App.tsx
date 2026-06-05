@@ -1107,6 +1107,26 @@ const ExcalidrawWrapper = () => {
               });
             }
           }}
+          onResetCanvas={() => {
+            if (!excalidrawAPI) {
+              return;
+            }
+            void openConfirmModal({
+              title: "Delete current scene?",
+              description:
+                "This will permanently delete the current scene and clear the canvas. This cannot be undone.",
+              actionLabel: "Delete",
+              color: "danger",
+            }).then((confirmed) => {
+              if (confirmed) {
+                void sceneVaultService
+                  .resetCanvas(excalidrawAPI)
+                  .then(() => {
+                    refreshActiveVaultSceneId();
+                  });
+              }
+            });
+          }}
         />
         <AppWelcomeScreen
           onCollabDialogOpen={onCollabDialogOpen}

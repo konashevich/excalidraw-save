@@ -47,6 +47,8 @@ interface ImportMetaEnv {
   VITE_APP_GOOGLE_DRIVE_FOLDER: string;
 
   VITE_APP_ENABLE_TRACKING: string;
+  /** Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX). */
+  VITE_APP_GA_MEASUREMENT_ID: string;
 
   MODE: string;
 

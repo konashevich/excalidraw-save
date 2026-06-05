@@ -147,7 +147,15 @@ export default defineConfig(({ mode }) => {
         },
       }),
       svgrPlugin(),
-      ViteEjsPlugin(),
+      ViteEjsPlugin(() => ({
+        PROD: mode === "production",
+        VITE_APP_DEV_DISABLE_LIVE_RELOAD:
+          envVars.VITE_APP_DEV_DISABLE_LIVE_RELOAD === "true",
+        VITE_APP_ENABLE_TRACKING:
+          envVars.VITE_APP_ENABLE_TRACKING === "true",
+        VITE_APP_GA_MEASUREMENT_ID:
+          envVars.VITE_APP_GA_MEASUREMENT_ID ?? "",
+      })),
       VitePWA({
         registerType: "autoUpdate",
         devOptions: {

@@ -35,3 +35,8 @@ export const flushVaultSync = async (
     await sceneVaultService.syncActiveScene(api);
   }
 };
+
+/** Drop a pending debounced sync without persisting canvas state. */
+export const cancelVaultSync = (): void => {
+  debouncedSync.cancel();
+};

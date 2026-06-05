@@ -214,4 +214,20 @@ describe("SceneVaultService", () => {
     expect(await store.getActiveSceneId()).toBeNull();
     expect(await store.listScenes()).toHaveLength(1);
   });
+
+  it("resetCanvas deletes active scene without archiving", async () => {
+    const api = makeAPI({
+      elements: [{ ...rectangleFixture }],
+      appState: {},
+      files: {},
+    });
+
+    await service.archiveCurrentScene(api);
+    expect(await store.listScenes()).toHaveLength(1);
+
+    await service.resetCanvas(api);
+    expect(api.resetScene).toHaveBeenCalled();
+    expect(await store.getActiveSceneId()).toBeNull();
+    expect(await store.listScenes()).toHaveLength(0);
+  });
 });

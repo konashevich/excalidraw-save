@@ -16,6 +16,7 @@ Stock Excalidraw keeps one implicit “current scene” in the browser; reset/ne
 - **Google Drive sync & share** (in progress, early stage) — planned backup/restore of the vault and share links via the user’s Drive; see plan below.
 - **GitHub Pages hosting** on custom domain **diagrams.free** — static SPA, no app server. See [docs/github-pages-hosting.md](docs/github-pages-hosting.md).
 - **Shape libraries** — browse/install still points at Excalidraw’s public catalog (`libraries.excalidraw.com`); personal libraries stay in the browser. A self-hosted or independent catalog may come later. See [docs/libraries-overview.md](docs/libraries-overview.md).
+- **Default hand-drawn font** — **Nanum Pen Script** (Google Font, SIL OFL), self-hosted as woff2; replaces upstream Excalifont/Virgil as the canvas default. Excalifont remains in the font picker.
 
 Full user-facing summary: [README.md](README.md).
 
@@ -58,6 +59,32 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 
 ---
 
+## Default hand-drawn font
+
+**Font:** Nanum Pen Script (Google Fonts, SIL OFL)  
+**Source archive:** [docs/Nanum_Pen_Script.zip](docs/Nanum_Pen_Script.zip)  
+**Bundled assets:** `packages/excalidraw/fonts/NanumPenScript/` (`NanumPenScript-Regular.woff2` + `index.ts`)
+
+| Item | Location / value |
+|------|------------------|
+| Font family name | `"Nanum Pen Script"` |
+| `FONT_FAMILY` ID | `4` (keep when swapping fonts — existing scenes use this ID) |
+| Default constant | `DEFAULT_FONT_FAMILY` in `packages/common/src/constants.ts` |
+| Metrics | `packages/common/src/font-metadata.ts` |
+| Registration | `packages/excalidraw/fonts/Fonts.ts` → `init("Nanum Pen Script", ...)` |
+| Font picker default | `packages/excalidraw/components/FontPicker/FontPicker.tsx` |
+| Welcome-screen hints | `packages/excalidraw/components/welcome-screen/WelcomeScreen.scss` (`.excalifont` class) |
+| License attribution | [NOTICE](./NOTICE) |
+
+**Agent notes:**
+
+- Fonts are **bundled locally** (woff2); production does not load canvas fonts from `fonts.googleapis.com`.
+- **Excalifont** (ID `5`) stays in the picker as an alternate hand-drawn face.
+- To replace the default font: convert TTF → woff2 (project has `fonteditor-core` + `wawoff2`), add a folder under `packages/excalidraw/fonts/`, wire through the files above, update NOTICE, and remove the old font folder entirely — no legacy fallbacks.
+- CJK fallback for hand-drawn fonts uses **Xiaolai** via `getFontFamilyFallbacks()` in `constants.ts`.
+
+---
+
 ## Google Drive sync & share (in progress)
 
 **Flag:** `VITE_APP_GOOGLE_DRIVE` (`false` in production until GCP secrets + verification).
@@ -89,7 +116,7 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 - **URL:** https://diagrams.free  
 - **Deploy:** push to `master` → GitHub Actions → build → GitHub Pages ([`.github/workflows/deploy-github-pages.yml`](.github/workflows/deploy-github-pages.yml))  
 - **Vite `base`:** `/` (custom apex domain)  
-- **Production env:** `.env.production` — scene vault on, official Excalidraw backends empty, tracking off, diagrams.free branding  
+- **Production env:** `.env.production` — scene vault on, official Excalidraw backends empty, GA4 when `VITE_APP_ENABLE_TRACKING=true`, diagrams.free branding  
 
 Details: [docs/github-pages-hosting.md](docs/github-pages-hosting.md).
 
@@ -141,7 +168,12 @@ If `yarn install` fails with `ENOSPC`, set `TMPDIR` and `YARN_CACHE_FOLDER` to a
 
 Support: [support@diagrams.free](mailto:support@diagrams.free). Issues: [github.com/konashevich/diagrams-free](https://github.com/konashevich/diagrams-free).
 
+---
 
-## Google Console 
-Project ID: diagrams-free
-Number: 658308114676
+## Google Cloud (Drive OAuth)
+
+| Field | Value |
+|-------|-------|
+| Project ID | `diagrams-free` |
+| Project number | `658308114676` |
+| Console account | `konashevich@gmail.com` |

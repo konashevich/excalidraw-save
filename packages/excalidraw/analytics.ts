@@ -33,7 +33,13 @@ export const trackEvent = (
       console.info("trackEvent", { category, action, label, value });
     }
 
-    if (window.sa_event) {
+    if (window.gtag) {
+      window.gtag("event", action, {
+        event_category: category,
+        event_label: label,
+        value,
+      });
+    } else if (window.sa_event) {
       window.sa_event(action, {
         category,
         label,
