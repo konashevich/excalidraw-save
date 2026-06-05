@@ -5,6 +5,7 @@ import { registerSW } from "virtual:pwa-register";
 import "../excalidraw-app/sentry";
 
 import { applyBranding } from "./branding/applyBranding";
+import { CookieConsentBanner } from "./components/CookieConsentBanner";
 import ExcalidrawApp from "./App";
 
 applyBranding();
@@ -16,5 +17,6 @@ registerSW();
 root.render(
   <StrictMode>
     <ExcalidrawApp />
+    <CookieConsentBanner />
   </StrictMode>,
 );

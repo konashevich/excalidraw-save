@@ -54,16 +54,32 @@
     <link rel="canonical" href="https://diagrams.free" />
 
     <% if (typeof PROD != 'undefined' && PROD == true && VITE_APP_ENABLE_TRACKING && VITE_APP_GA_MEASUREMENT_ID) { %>
-    <!-- Google tag (gtag.js) — GA4 -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=<%= VITE_APP_GA_MEASUREMENT_ID %>"
-    ></script>
+    <!-- Google tag (gtag.js) — GA4 + Consent Mode v2 (EEA/UK) -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
       }
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
+        wait_for_update: 500,
+        region: <%- EEA_UK_GA_CONSENT_REGIONS_JSON %>,
+      });
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "granted",
+      });
+    </script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=<%= VITE_APP_GA_MEASUREMENT_ID %>"
+    ></script>
+    <script>
       gtag("js", new Date());
       gtag("config", "<%= VITE_APP_GA_MEASUREMENT_ID %>");
     </script>

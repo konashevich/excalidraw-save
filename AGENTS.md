@@ -116,6 +116,8 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 
 **Service:** [Google Analytics 4](https://analytics.google.com/) (visit statistics only — not diagram content).
 
+**Implementation plan:** [docs/ga4-analytics-plan.md](docs/ga4-analytics-plan.md) (events, funnels, Phase 1/2).
+
 **Measurement ID:** `G-H31J97S7ZC`
 
 | Item | Location / value |
@@ -125,6 +127,9 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 | gtag snippet | `excalidraw-app/index.html` (injected at build time via EJS; **production only**) |
 | EJS data | `excalidraw-app/vite.config.mts` → `ViteEjsPlugin` |
 | Custom events | `packages/excalidraw/analytics.ts` → `trackEvent()` → `window.gtag` (limited categories; no canvas/vault payloads) |
+| Consent Mode v2 | `excalidraw-app/index.html` — denied in EEA/UK until accept; granted elsewhere |
+| EU/UK banner | `excalidraw-app/components/CookieConsentBanner.tsx` + `excalidraw-app/analytics/cookieConsent.ts` |
+| EEA/UK region list | `excalidraw-app/analytics/consentRegions.ts` |
 | Privacy policy | [public/privacy/index.html](public/privacy/index.html) → https://diagrams.free/privacy/ |
 
 **Agent notes:**
@@ -133,6 +138,7 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 - Do not add diagram, vault, or file contents to analytics events.
 - To disable analytics in a build, set `VITE_APP_ENABLE_TRACKING=false` or clear `VITE_APP_GA_MEASUREMENT_ID`.
 - Upstream `trackEvent` / SimpleAnalytics (`sa_event`) remain as a fallback in `analytics.ts` but are unused in production.
+- **EEA/UK visitors** must be able to reject analytics; do not auto-grant without consent in those regions. Geo lookup uses `api.country.is` (documented in privacy policy).
 
 ---
 
@@ -189,6 +195,7 @@ If `yarn install` fails with `ENOSPC`, set `TMPDIR` and `YARN_CACHE_FOLDER` to a
 | GitHub Pages / domain | [docs/github-pages-hosting.md](docs/github-pages-hosting.md) |
 | Branding & IP clearance | [docs/diagrams-free-branding-and-ip-clearance.md](docs/diagrams-free-branding-and-ip-clearance.md) |
 | Privacy policy (GA4, Drive, local data) | [public/privacy/index.html](public/privacy/index.html) |
+| GA4 product analytics plan | [docs/ga4-analytics-plan.md](docs/ga4-analytics-plan.md) |
 | Shape libraries | [docs/libraries-overview.md](docs/libraries-overview.md) |
 | Upstream editor development | [docs.excalidraw.com](https://docs.excalidraw.com/docs/introduction/development) |
 

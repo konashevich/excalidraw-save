@@ -8,9 +8,22 @@ import checker from "vite-plugin-checker";
 import { createHtmlPlugin } from "vite-plugin-html";
 import Sitemap from "vite-plugin-sitemap";
 import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
+
+import { EEA_UK_GA_CONSENT_REGIONS } from "./analytics/consentRegions";
+
 export default defineConfig(({ mode }) => {
   // To load .env variables
   const envVars = loadEnv(mode, `../`);
+
+  const indexHtmlEjsData = {
+    PROD: mode === "production",
+    VITE_APP_DEV_DISABLE_LIVE_RELOAD:
+      envVars.VITE_APP_DEV_DISABLE_LIVE_RELOAD === "true",
+    VITE_APP_ENABLE_TRACKING: envVars.VITE_APP_ENABLE_TRACKING === "true",
+    VITE_APP_GA_MEASUREMENT_ID: envVars.VITE_APP_GA_MEASUREMENT_ID ?? "",
+    EEA_UK_GA_CONSENT_REGIONS_JSON: JSON.stringify(EEA_UK_GA_CONSENT_REGIONS),
+  };
+
   // https://vitejs.dev/config/
   return {
     base: "/",
@@ -147,15 +160,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       svgrPlugin(),
-      ViteEjsPlugin(() => ({
-        PROD: mode === "production",
-        VITE_APP_DEV_DISABLE_LIVE_RELOAD:
-          envVars.VITE_APP_DEV_DISABLE_LIVE_RELOAD === "true",
-        VITE_APP_ENABLE_TRACKING:
-          envVars.VITE_APP_ENABLE_TRACKING === "true",
-        VITE_APP_GA_MEASUREMENT_ID:
-          envVars.VITE_APP_GA_MEASUREMENT_ID ?? "",
-      })),
+      ViteEjsPlugin(() => indexHtmlEjsData),
       VitePWA({
         registerType: "autoUpdate",
         devOptions: {
@@ -304,6 +309,9 @@ export default defineConfig(({ mode }) => {
       }),
       createHtmlPlugin({
         minify: true,
+        inject: {
+          data: indexHtmlEjsData,
+        },
       }),
     ],
     publicDir: "../public",
