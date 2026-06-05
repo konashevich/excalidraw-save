@@ -209,8 +209,9 @@ export const ContactUsDialog = ({ isOpen, onClose, excalidrawAPI }: Props) => {
             disabled={submitting}
           />
           <FilledButton
-            label={t("contactUs.submit")}
-            status={submitting ? "loading" : null}
+            label={
+              submitting ? t("contactUs.submitting") : t("contactUs.submit")
+            }
             disabled={submitting}
             onClick={() => formRef.current?.requestSubmit()}
           />

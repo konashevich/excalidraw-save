@@ -434,6 +434,7 @@
     "helpButton": "Contact us",
     "intro": "Send feedback or questions to diagrams.free support. All fields are required.",
     "submit": "Submit",
+    "submitting": "Sending…",
     "fields": {
       "name": "Name",
       "subject": "Subject",
