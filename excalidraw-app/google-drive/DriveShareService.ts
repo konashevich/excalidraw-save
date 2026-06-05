@@ -11,16 +11,14 @@ import {
   downloadFileTextWithApiKey,
   ensureDriveFolderStructure,
   setFilePermissionAnyoneReader,
-  setFilePermissionUserReader,
   uploadTextFile,
 } from "./api";
 import { getAccessToken, isSignedInToGoogle } from "./auth";
 import { DriveAuthError } from "./errors";
 import { buildShareUrl } from "./shareLink";
 
-export type DriveSharePermission =
-  | { type: "anyone" }
-  | { type: "users"; emails: string[] };
+/** v1: anyone-with-link only (`drive.file` scope cannot open email-restricted files for recipients). */
+export type DriveSharePermission = { type: "anyone" };
 
 export type DriveShareResult = {
   url: string;
@@ -44,10 +42,7 @@ export class DriveShareService {
     return serializeAsJSON(elements, appState, files, "local");
   }
 
-  async createShareLink(
-    api: ExcalidrawImperativeAPI,
-    permission: DriveSharePermission,
-  ): Promise<DriveShareResult> {
+  async createShareLink(api: ExcalidrawImperativeAPI): Promise<DriveShareResult> {
     this.assertReady();
 
     const content = this.serializeScene(api);
@@ -64,19 +59,7 @@ export class DriveShareService {
       mimeType: MIME_TYPES.excalidraw,
     });
 
-    if (permission.type === "anyone") {
-      await setFilePermissionAnyoneReader(fileId);
-    } else {
-      const emails = permission.emails
-        .map((e) => e.trim())
-        .filter(Boolean);
-      if (!emails.length) {
-        throw new Error("Enter at least one Google account email.");
-      }
-      for (const email of emails) {
-        await setFilePermissionUserReader(fileId, email);
-      }
-    }
+    await setFilePermissionAnyoneReader(fileId);
 
     return { url: buildShareUrl(fileId), fileId };
   }

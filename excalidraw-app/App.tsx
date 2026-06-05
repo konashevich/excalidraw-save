@@ -1298,11 +1298,9 @@ const ExcalidrawWrapper = () => {
             }
             onCreateDriveShareLink={
               isDriveShareEnabled && excalidrawAPI
-                ? async (permission) => {
-                    const result = await driveShareService.createShareLink(
-                      excalidrawAPI,
-                      permission,
-                    );
+                ? async () => {
+                    const result =
+                      await driveShareService.createShareLink(excalidrawAPI);
                     setLatestShareableLink(result.url);
                   }
                 : undefined

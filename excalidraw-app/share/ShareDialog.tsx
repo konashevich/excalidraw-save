@@ -2,7 +2,6 @@ import { trackEvent } from "@excalidraw/excalidraw/analytics";
 import { copyTextToSystemClipboard } from "@excalidraw/excalidraw/clipboard";
 import { Dialog } from "@excalidraw/excalidraw/components/Dialog";
 import { FilledButton } from "@excalidraw/excalidraw/components/FilledButton";
-import { TextField } from "@excalidraw/excalidraw/components/TextField";
 import {
   copyIcon,
   LinkIcon,
@@ -28,13 +27,10 @@ import {
 import "./ShareDialog.scss";
 import { QRCode } from "./QRCode";
 
-import type { DriveSharePermission } from "../google-drive";
 import type { CollabAPI } from "../collab/Collab";
 
 type OnExportToBackend = () => void | Promise<void>;
-type OnCreateDriveShareLink = (
-  permission: DriveSharePermission,
-) => Promise<void>;
+type OnCreateDriveShareLink = () => Promise<void>;
 type ShareDialogType = "share" | "collaborationOnly";
 
 export const shareDialogStateAtom = atom<
@@ -199,8 +195,6 @@ const DriveShareSection = ({
 }) => {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<"anyone" | "users">("anyone");
-  const [emails, setEmails] = useState("");
 
   const runShare = async () => {
     setBusy(true);
@@ -209,14 +203,7 @@ const DriveShareSection = ({
       if (!isSignedInToGoogle()) {
         await signInWithGoogle();
       }
-      const permission: DriveSharePermission =
-        mode === "anyone"
-          ? { type: "anyone" }
-          : {
-              type: "users",
-              emails: emails.split(/[\s,;]+/),
-            };
-      await onCreateDriveShareLink(permission);
+      await onCreateDriveShareLink();
       handleClose();
     } catch (err) {
       console.error("[google-drive] share", err);
@@ -232,40 +219,20 @@ const DriveShareSection = ({
         {t("exportDialog.link_title")}
       </div>
       <div className="ShareDialog__picker__description">
-        Creates a link on <strong>diagrams.free</strong>. The drawing file is
-        stored in your Google Drive; who can open it is controlled by Google
-        sharing below.
+        Creates an <strong>anyone with the link</strong> URL on{" "}
+        <strong>diagrams.free</strong>. The file is stored in your Google Drive
+        under <code>diagrams.free/shared/</code>. To restrict access to specific
+        people, change sharing on that file in{" "}
+        <a
+          href="https://drive.google.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Google Drive
+        </a>{" "}
+        after creating the link (in-app email sharing is not supported with our
+        current Google permissions).
       </div>
-
-      <div className="ShareDialog__picker__button ShareDialog__drive-modes">
-        <label className="ShareDialog__drive-mode">
-          <input
-            type="radio"
-            name="drive-share-mode"
-            checked={mode === "anyone"}
-            onChange={() => setMode("anyone")}
-          />
-          Anyone with the link
-        </label>
-        <label className="ShareDialog__drive-mode">
-          <input
-            type="radio"
-            name="drive-share-mode"
-            checked={mode === "users"}
-            onChange={() => setMode("users")}
-          />
-          Specific Google accounts
-        </label>
-      </div>
-
-      {mode === "users" ? (
-        <TextField
-          label="Email addresses"
-          placeholder="alice@gmail.com, bob@gmail.com"
-          value={emails}
-          onChange={(value) => setEmails(value)}
-        />
-      ) : null}
 
       <div className="ShareDialog__picker__button">
         <FilledButton
