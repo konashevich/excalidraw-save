@@ -24,6 +24,15 @@
   }
 
   &.theme--dark {
+    // Top shape toolbar tray (Island) — background behind the tool buttons, not the buttons themselves.
+    .Island.App-toolbar {
+      --island-bg-color: #181818;
+      background-color: #181818 !important;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+
     .App-toolbar-container,
     .App-toolbar--mobile,
     .mobile-toolbar {
