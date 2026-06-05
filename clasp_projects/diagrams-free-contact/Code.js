@@ -166,13 +166,23 @@ function sendToSupport(subject, body, replyTo) {
       outboundOptions(replyTo),
     );
   } catch (firstError) {
-    console.warn("Support send failed, using fallback: " + firstError);
-    GmailApp.sendEmail(
-      FALLBACK_EMAIL,
-      "[contact-form-fallback] " + subject,
-      body + "\n\n(Original To: " + SUPPORT_EMAIL + ")",
-      outboundOptionsFallback(replyTo),
-    );
+    console.warn("Support send as support@ failed: " + firstError);
+    try {
+      GmailApp.sendEmail(
+        SUPPORT_EMAIL,
+        subject,
+        body,
+        outboundOptionsFallback(replyTo),
+      );
+    } catch (secondError) {
+      console.warn("Support send failed, using fallback inbox: " + secondError);
+      GmailApp.sendEmail(
+        FALLBACK_EMAIL,
+        "[contact-form-fallback] " + subject,
+        body + "\n\n(Original To: " + SUPPORT_EMAIL + ")",
+        outboundOptionsFallback(replyTo),
+      );
+    }
   }
 }
 
