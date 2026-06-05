@@ -143,7 +143,7 @@ export const ContactUsDialog = ({ isOpen, onClose, excalidrawAPI }: Props) => {
         </div>
 
         <div className="ContactUsDialog__field">
-          <label className="ContactUsDialog__textarea-label" htmlFor="contact-email">
+          <label className="ContactUsDialog__label" htmlFor="contact-email">
             {t("contactUs.fields.email")}
           </label>
           <input
@@ -164,7 +164,7 @@ export const ContactUsDialog = ({ isOpen, onClose, excalidrawAPI }: Props) => {
         </div>
 
         <div className="ContactUsDialog__field">
-          <label className="ContactUsDialog__textarea-label" htmlFor="contact-message">
+          <label className="ContactUsDialog__label" htmlFor="contact-message">
             {t("contactUs.fields.message")}
           </label>
           <textarea

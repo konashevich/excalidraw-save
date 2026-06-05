@@ -129,6 +129,11 @@
     <% if (typeof PROD != 'undefined' && PROD == true) { %>
     <!-- Following placeholder is replaced during the build step -->
     <!-- PLACEHOLDER:EXCALIDRAW_APP_FONTS -->
+    <% } else { %>
+    <script>
+      window.EXCALIDRAW_ASSET_PATH = window.origin;
+    </script>
+    <% } %>
 
     <!-- Register Assistant as the UI font, before the scene inits -->
     <link
@@ -136,19 +141,6 @@
       href="../packages/excalidraw/fonts/fonts.css"
       type="text/css"
     />
-
-    <% } else { %>
-    <script>
-      window.EXCALIDRAW_ASSET_PATH = window.origin;
-    </script>
-
-    <!-- Same UI font as production (Assistant) for dev parity -->
-    <link
-      rel="stylesheet"
-      href="../packages/excalidraw/fonts/fonts.css"
-      type="text/css"
-    />
-    <% } %>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

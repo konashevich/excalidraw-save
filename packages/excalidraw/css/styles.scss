@@ -40,6 +40,13 @@ body.excalidraw-cursor-resize * {
     Roboto, Helvetica, Arial, sans-serif;
   font-family: var(--ui-font);
 
+  // Form controls do not inherit font-family in most browsers (→ Times New Roman).
+  input,
+  textarea,
+  select {
+    font-family: var(--ui-font);
+  }
+
   position: relative;
   overflow: hidden;
   color: var(--text-primary-color);
@@ -607,6 +614,7 @@ body.excalidraw-cursor-resize * {
   input[type="text"],
   textarea:not(.excalidraw-wysiwyg) {
     color: var(--text-primary-color);
+    font-family: var(--ui-font);
     border: 1.5px solid var(--input-border-color);
     padding: 0.75rem;
     white-space: nowrap;

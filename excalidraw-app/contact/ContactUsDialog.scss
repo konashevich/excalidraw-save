@@ -31,11 +31,31 @@
       opacity: 0.7;
     }
 
-    &__textarea-label {
+    &__textarea-label,
+    &__label {
       font-family: var(--ui-font);
       font-size: 0.75rem;
       font-weight: 500;
       color: var(--ExcTextField--label-color, var(--text-primary-color));
+    }
+
+    // Match TextField (name, subject) to the compact custom fields below.
+    .ExcTextField__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .ExcTextField__input {
+      height: auto;
+      min-height: unset;
+      padding: 0.5rem 0.625rem;
+      border-radius: var(--border-radius-lg);
+
+      input {
+        height: auto;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+      }
     }
 
     &__textarea,
