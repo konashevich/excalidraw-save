@@ -13,9 +13,16 @@ export const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client";
 
 export const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
 
+/** Multipart/resumable uploads must use the upload host, not drive/v3. */
+export const DRIVE_UPLOAD_API_BASE =
+  "https://www.googleapis.com/upload/drive/v3";
+
+/** Drive accepts standard MIME types; excalidraw JSON is stored as application/json. */
+export const DRIVE_FILE_MIME_TYPE = "application/json";
+
 export const DRIVE_MANIFEST_VERSION = 1;
 
-export const DRIVE_FOLDER_CACHE_KEY = "diagrams-free:drive-folder-ids";
+export const DRIVE_FOLDER_CACHE_KEY = "diagrams-free:drive-folder-ids-v2";
 
 export const DRIVE_TOKEN_STORAGE_KEY = "diagrams-free:google-access-token";
 

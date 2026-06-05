@@ -1,9 +1,9 @@
-import { MIME_TYPES } from "@excalidraw/common";
-
 import {
   DRIVE_API_BASE,
+  DRIVE_FILE_MIME_TYPE,
   DRIVE_FOLDER_CACHE_KEY,
   DRIVE_MANIFEST_VERSION,
+  DRIVE_UPLOAD_API_BASE,
   getDriveRootFolderName,
   getGoogleApiKey,
 } from "./constants";
@@ -12,12 +12,11 @@ import { getAccessToken, handleDriveAuthFailure } from "./auth";
 import {
   DRIVE_MANIFEST_FILENAME,
   DRIVE_SCENES_FOLDER,
-  DRIVE_SHARED_FOLDER,
   DRIVE_VAULT_FOLDER,
   driveSceneFilename,
 } from "./paths";
 
-import type { DriveFolderIds, DriveManifest } from "./types";
+import type { DriveFolderIds, DriveManifest, DriveSyncLocation } from "./types";
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 
@@ -111,17 +110,6 @@ const createFolder = async (
   return data.id;
 };
 
-const ensureChildFolder = async (
-  parentId: string,
-  name: string,
-): Promise<string> => {
-  const existing = await findChildFolder(parentId, name);
-  if (existing) {
-    return existing;
-  }
-  return createFolder(name, parentId);
-};
-
 const ensureRootFolder = async (): Promise<string> => {
   const rootName = getDriveRootFolderName();
   const q = encodeURIComponent(
@@ -139,14 +127,41 @@ const ensureRootFolder = async (): Promise<string> => {
 
 const buildDriveFolderStructure = async (): Promise<DriveFolderIds> => {
   const rootId = await ensureRootFolder();
-  const vaultId = await ensureChildFolder(rootId, DRIVE_VAULT_FOLDER);
-  const scenesId = await ensureChildFolder(vaultId, DRIVE_SCENES_FOLDER);
-  const sharedId = await ensureChildFolder(rootId, DRIVE_SHARED_FOLDER);
-
-  const ids: DriveFolderIds = { rootId, vaultId, scenesId, sharedId };
+  const ids: DriveFolderIds = { rootId };
   writeFolderCache(ids);
   return ids;
 };
+
+/** Read location for existing backups (flat root or legacy vault/scenes folders). */
+export const resolveDriveSyncLocation = async (
+  folders: DriveFolderIds,
+): Promise<DriveSyncLocation> => {
+  const { rootId } = folders;
+
+  if (await findFileInParent(rootId, DRIVE_MANIFEST_FILENAME)) {
+    return { manifestFolderId: rootId, scenesFolderId: rootId };
+  }
+
+  const legacyVaultId = await findChildFolder(rootId, DRIVE_VAULT_FOLDER);
+  if (
+    legacyVaultId &&
+    (await findFileInParent(legacyVaultId, DRIVE_MANIFEST_FILENAME))
+  ) {
+    const scenesFolderId =
+      (await findChildFolder(legacyVaultId, DRIVE_SCENES_FOLDER)) ??
+      legacyVaultId;
+    return { manifestFolderId: legacyVaultId, scenesFolderId };
+  }
+
+  return { manifestFolderId: rootId, scenesFolderId: rootId };
+};
+
+export const flatDriveSyncLocation = (
+  folders: DriveFolderIds,
+): DriveSyncLocation => ({
+  manifestFolderId: folders.rootId,
+  scenesFolderId: folders.rootId,
+});
 
 export const ensureDriveFolderStructure = async (): Promise<DriveFolderIds> => {
   const cached = readFolderCache();
@@ -185,6 +200,21 @@ const findFileInParent = async (
   return data.files?.[0]?.id ?? null;
 };
 
+const parseDriveErrorMessage = async (
+  response: Response,
+  fallback: string,
+): Promise<string> => {
+  try {
+    const body = (await response.json()) as { error?: { message?: string } };
+    if (body.error?.message) {
+      return body.error.message;
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return fallback;
+};
+
 export const uploadTextFile = async (options: {
   parentId: string;
   name: string;
@@ -192,7 +222,7 @@ export const uploadTextFile = async (options: {
   mimeType?: string;
   existingFileId?: string | null;
 }): Promise<string> => {
-  const mimeType = options.mimeType ?? MIME_TYPES.excalidraw;
+  const mimeType = options.mimeType ?? DRIVE_FILE_MIME_TYPE;
   const metadata = {
     name: options.name,
     mimeType,
@@ -216,8 +246,8 @@ export const uploadTextFile = async (options: {
   }
 
   const url = options.existingFileId
-    ? `${DRIVE_API_BASE}/files/${options.existingFileId}?uploadType=multipart&fields=id`
-    : `${DRIVE_API_BASE}/files?uploadType=multipart&fields=id`;
+    ? `${DRIVE_UPLOAD_API_BASE}/files/${options.existingFileId}?uploadType=multipart&fields=id`
+    : `${DRIVE_UPLOAD_API_BASE}/files?uploadType=multipart&fields=id`;
 
   const response = await fetch(url, {
     method: options.existingFileId ? "PATCH" : "POST",
@@ -229,10 +259,11 @@ export const uploadTextFile = async (options: {
     if (response.status === 401) {
       handleDriveAuthFailure();
     }
-    throw new DriveApiError(
+    const message = await parseDriveErrorMessage(
+      response,
       `Upload failed (${response.status})`,
-      response.status,
     );
+    throw new DriveApiError(message, response.status);
   }
 
   const data = (await response.json()) as { id: string };

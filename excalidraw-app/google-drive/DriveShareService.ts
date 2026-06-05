@@ -55,10 +55,9 @@ export class DriveShareService {
     return withDriveFolderRetry(async () => {
       const folders = await ensureDriveFolderStructure();
       const fileId = await uploadTextFile({
-        parentId: folders.sharedId,
+        parentId: folders.rootId,
         name: shareFilename(),
         content,
-        mimeType: MIME_TYPES.excalidraw,
       });
 
       await setFilePermissionAnyoneReader(fileId);

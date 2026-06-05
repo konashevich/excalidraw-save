@@ -1,8 +1,11 @@
 export type DriveFolderIds = {
   rootId: string;
-  vaultId: string;
-  scenesId: string;
-  sharedId: string;
+};
+
+/** Where manifest.json and vault scene files live (flat root or legacy vault/scenes). */
+export type DriveSyncLocation = {
+  manifestFolderId: string;
+  scenesFolderId: string;
 };
 
 export type DriveManifestSceneEntry = {
