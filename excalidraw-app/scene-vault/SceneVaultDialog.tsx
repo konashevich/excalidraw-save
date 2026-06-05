@@ -307,7 +307,7 @@ export const SceneVaultDialog = ({
             label="New canvas"
             onClick={() =>
               runAction(async () => {
-                await sceneVaultService.newCanvas(excalidrawAPI);
+                await sceneVaultService.newCanvas(excalidrawAPI, "vault_dialog");
                 onClose();
               })
             }

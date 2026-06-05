@@ -15,8 +15,15 @@ import { downloadVaultSceneAsFile } from "./sceneExport";
 import { sceneVaultStore, type SceneVaultStore } from "./SceneVaultStore";
 import type { VaultScene } from "./types";
 import { duplicateSceneTitle, isSceneNonEmpty } from "./utils";
+import {
+  trackNewCanvas,
+  type NewCanvasAnalyticsSource,
+} from "../analytics/engagement";
+
 import { assertVaultEditingAllowed, isVaultEditingAllowed } from "./vaultGuards";
 import { cancelVaultSync, flushVaultSync } from "./vaultSync";
+
+export type { NewCanvasAnalyticsSource };
 
 export class SceneVaultService {
   constructor(private readonly store: SceneVaultStore = sceneVaultStore) {}
@@ -122,13 +129,18 @@ export class SceneVaultService {
     return true;
   }
 
-  async newCanvas(api: ExcalidrawImperativeAPI): Promise<void> {
+  async newCanvas(
+    api: ExcalidrawImperativeAPI,
+    analyticsSource: NewCanvasAnalyticsSource = "menu",
+  ): Promise<void> {
     assertVaultEditingAllowed();
     await this.flushBeforeVaultIO(api);
+    const hadContent = isSceneNonEmpty(captureSceneFromAPICloned(api));
     await this.persistActiveCanvas(api);
     api.resetScene();
     await this.store.setActiveSceneId(null);
     LocalData.flushSave();
+    trackNewCanvas(analyticsSource, hadContent);
   }
 
   /** Clear the canvas and remove the active vault entry without archiving. */

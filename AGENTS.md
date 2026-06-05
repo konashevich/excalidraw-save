@@ -126,7 +126,8 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 | Measurement ID env | `VITE_APP_GA_MEASUREMENT_ID=G-H31J97S7ZC` in `.env.production` |
 | gtag snippet | `excalidraw-app/index.html` (injected at build time via EJS; **production only**) |
 | EJS data | `excalidraw-app/vite.config.mts` → `ViteEjsPlugin` |
-| Custom events | `packages/excalidraw/analytics.ts` → `trackEvent()` → `window.gtag` (limited categories; no canvas/vault payloads) |
+| Custom events | `packages/excalidraw/analytics.ts` → `trackEvent()` → `window.gtag`; categories: `command_palette`, `export`, `load`, `engagement` |
+| Engagement helpers | `excalidraw-app/analytics/engagement.ts` — `canvas_used`, `meaningful_session`, `new_canvas` |
 | Consent Mode v2 | `excalidraw-app/index.html` — denied in EEA/UK until accept; granted elsewhere |
 | EU/UK banner | `excalidraw-app/components/CookieConsentBanner.tsx` + `excalidraw-app/analytics/cookieConsent.ts` |
 | EEA/UK region list | `excalidraw-app/analytics/consentRegions.ts` |

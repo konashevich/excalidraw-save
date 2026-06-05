@@ -9,6 +9,10 @@ import {
   useExcalidrawAPI,
 } from "@excalidraw/excalidraw";
 import { trackEvent } from "@excalidraw/excalidraw/analytics";
+import {
+  initSessionEngagementTracking,
+  trackCanvasUsedOnce,
+} from "./analytics/engagement";
 import { getDefaultAppState } from "@excalidraw/excalidraw/appState";
 import {
   CommandPalette,
@@ -466,8 +470,10 @@ const ExcalidrawWrapper = () => {
 
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const vaultMigrationRanRef = useRef(false);
+  const liveElementCountRef = useRef(0);
 
   useEffect(() => {
+    initSessionEngagementTracking();
     trackEvent("load", "frame", getFrame());
     // Delayed so that the app has a time to load the latest SW
     setTimeout(() => {
@@ -827,6 +833,12 @@ const ExcalidrawWrapper = () => {
     appState: AppState,
     files: BinaryFiles,
   ) => {
+    const liveCount = elements.filter((el) => !el.isDeleted).length;
+    if (liveCount > 0 && liveElementCountRef.current === 0) {
+      trackCanvasUsedOnce("element_created");
+    }
+    liveElementCountRef.current = liveCount;
+
     if (collabAPI?.isCollaborating()) {
       collabAPI.syncElements(elements);
     }
@@ -881,6 +893,18 @@ const ExcalidrawWrapper = () => {
       );
     }
   };
+
+  const onPointerUpdate = useCallback<
+    NonNullable<ExcalidrawProps["onPointerUpdate"]>
+  >(
+    (payload) => {
+      if (payload.button === "down") {
+        trackCanvasUsedOnce("pointer");
+      }
+      collabAPI?.onPointerUpdate?.(payload);
+    },
+    [collabAPI],
+  );
 
   const [latestShareableLink, setLatestShareableLink] = useState<string | null>(
     null,
@@ -1029,7 +1053,7 @@ const ExcalidrawWrapper = () => {
         onExport={onExport}
         initialData={initialStatePromiseRef.current.promise}
         isCollaborating={isCollaborating}
-        onPointerUpdate={collabAPI?.onPointerUpdate}
+        onPointerUpdate={onPointerUpdate}
         UIOptions={{
           canvasActions: {
             clearCanvas: !sceneVaultEnabled,
@@ -1103,9 +1127,11 @@ const ExcalidrawWrapper = () => {
           onOpenSceneVault={() => setSceneVaultDialogOpen(true)}
           onNewCanvas={() => {
             if (excalidrawAPI) {
-              void sceneVaultService.newCanvas(excalidrawAPI).then(() => {
-                refreshActiveVaultSceneId();
-              });
+              void sceneVaultService
+                .newCanvas(excalidrawAPI, "menu")
+                .then(() => {
+                  refreshActiveVaultSceneId();
+                });
             }
           }}
           onResetCanvas={() => {

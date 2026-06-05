@@ -48,7 +48,9 @@ export const SceneVaultClearCanvasDialog = ({
     <ConfirmDialog
       title="Save and start new canvas?"
       onConfirm={() => {
-        void sceneVaultService.newCanvas(excalidrawAPI).then(() => {
+        void sceneVaultService
+          .newCanvas(excalidrawAPI, "clear_canvas_dialog")
+          .then(() => {
           onAfterClear();
           setOpen(false);
         });
