@@ -16,7 +16,6 @@ export const SaveToBrowserOverwriteAction: React.FC<{
   if (
     !isSceneVaultEnabled() ||
     !overwriteConfirmState.active ||
-    !overwriteConfirmState.showSaveToBrowser ||
     !excalidrawAPI
   ) {
     return null;

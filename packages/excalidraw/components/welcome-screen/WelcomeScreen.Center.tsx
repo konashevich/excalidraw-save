@@ -3,7 +3,13 @@ import { getShortcutFromShortcutName } from "../../actions/shortcuts";
 import { useTunnels } from "../../context/tunnels";
 import { useUIAppState } from "../../context/ui-appState";
 import { t, useI18n } from "../../i18n";
-import { useEditorInterface, useExcalidrawActionManager } from "../App";
+import {
+  useEditorInterface,
+  useExcalidrawActionManager,
+  useExcalidrawElements,
+} from "../App";
+import { openConfirmModal } from "../OverwriteConfirm/OverwriteConfirmState";
+import Trans from "../Trans";
 import { ExcalidrawLogo } from "../ExcalidrawLogo";
 import { HelpIcon, LoadIcon, usersIcon } from "../icons";
 
@@ -150,14 +156,35 @@ MenuItemHelp.displayName = "MenuItemHelp";
 const MenuItemLoadScene = () => {
   const appState = useUIAppState();
   const actionManager = useExcalidrawActionManager();
+  const elements = useExcalidrawElements();
 
   if (appState.viewModeEnabled) {
     return null;
   }
 
+  const handleSelect = async () => {
+    if (
+      !elements.length ||
+      (await openConfirmModal({
+        title: t("overwriteConfirm.modal.loadFromFile.title"),
+        actionLabel: t("overwriteConfirm.modal.loadFromFile.button"),
+        color: "warning",
+        description: (
+          <Trans
+            i18nKey="overwriteConfirm.modal.loadFromFile.description"
+            bold={(text) => <strong>{text}</strong>}
+            br={() => <br />}
+          />
+        ),
+      }))
+    ) {
+      actionManager.executeAction(actionLoadScene);
+    }
+  };
+
   return (
     <WelcomeScreenMenuItem
-      onSelect={() => actionManager.executeAction(actionLoadScene)}
+      onSelect={handleSelect}
       shortcut={getShortcutFromShortcutName("loadScene")}
       icon={LoadIcon}
     >
