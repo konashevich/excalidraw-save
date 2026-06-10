@@ -24,6 +24,7 @@ export const DRIVE_MANIFEST_VERSION = 1;
 
 export const DRIVE_FOLDER_CACHE_KEY = "diagrams-free:drive-folder-ids-v2";
 
+/** Google OAuth access token (~1h); stored in localStorage to survive PWA restarts. */
 export const DRIVE_TOKEN_STORAGE_KEY = "diagrams-free:google-access-token";
 
 export const DRIVE_TOKEN_EXPIRY_STORAGE_KEY =

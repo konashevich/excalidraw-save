@@ -22,7 +22,14 @@ const FOLDER_MIME = "application/vnd.google-apps.folder";
 
 const readFolderCache = (): DriveFolderIds | null => {
   try {
-    const raw = sessionStorage.getItem(DRIVE_FOLDER_CACHE_KEY);
+    let raw = localStorage.getItem(DRIVE_FOLDER_CACHE_KEY);
+    if (!raw) {
+      raw = sessionStorage.getItem(DRIVE_FOLDER_CACHE_KEY);
+      if (raw) {
+        localStorage.setItem(DRIVE_FOLDER_CACHE_KEY, raw);
+        sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
+      }
+    }
     if (!raw) {
       return null;
     }
@@ -33,10 +40,12 @@ const readFolderCache = (): DriveFolderIds | null => {
 };
 
 const writeFolderCache = (ids: DriveFolderIds): void => {
-  sessionStorage.setItem(DRIVE_FOLDER_CACHE_KEY, JSON.stringify(ids));
+  localStorage.setItem(DRIVE_FOLDER_CACHE_KEY, JSON.stringify(ids));
+  sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
 };
 
 export const clearDriveFolderCache = (): void => {
+  localStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
   sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
 };
 

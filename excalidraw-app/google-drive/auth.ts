@@ -47,9 +47,24 @@ const loadGisScript = (): Promise<void> => {
   return gisLoadPromise;
 };
 
+const migrateTokenFromSessionStorage = (): void => {
+  const legacyToken = sessionStorage.getItem(DRIVE_TOKEN_STORAGE_KEY);
+  const legacyExpiry = sessionStorage.getItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
+  if (!legacyToken || !legacyExpiry) {
+    return;
+  }
+  localStorage.setItem(DRIVE_TOKEN_STORAGE_KEY, legacyToken);
+  localStorage.setItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY, legacyExpiry);
+  sessionStorage.removeItem(DRIVE_TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
+};
+
+/** OAuth access token + expiry; localStorage survives PWA restarts until ~1h expiry. */
 const readStoredSession = (): DriveAuthSession | null => {
-  const accessToken = sessionStorage.getItem(DRIVE_TOKEN_STORAGE_KEY);
-  const expiryRaw = sessionStorage.getItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
+  migrateTokenFromSessionStorage();
+
+  const accessToken = localStorage.getItem(DRIVE_TOKEN_STORAGE_KEY);
+  const expiryRaw = localStorage.getItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
   if (!accessToken || !expiryRaw) {
     return null;
   }
@@ -62,11 +77,15 @@ const readStoredSession = (): DriveAuthSession | null => {
 
 const persistSession = (accessToken: string, expiresInSeconds: number): void => {
   const expiresAt = Date.now() + expiresInSeconds * 1000 - 60_000;
-  sessionStorage.setItem(DRIVE_TOKEN_STORAGE_KEY, accessToken);
-  sessionStorage.setItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY, String(expiresAt));
+  localStorage.setItem(DRIVE_TOKEN_STORAGE_KEY, accessToken);
+  localStorage.setItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY, String(expiresAt));
+  sessionStorage.removeItem(DRIVE_TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
 };
 
 const clearStoredSession = (): void => {
+  localStorage.removeItem(DRIVE_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
   sessionStorage.removeItem(DRIVE_TOKEN_STORAGE_KEY);
   sessionStorage.removeItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
 };
@@ -241,11 +260,13 @@ export const signOutFromGoogle = (): void => {
   }
   clearStoredSession();
   clearGoogleDriveLinked();
+  localStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
   sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
 };
 
 /** Drop expired token after 401; keep linked state so silent refresh can run. */
 export const handleDriveAuthFailure = (): void => {
   clearStoredSession();
+  localStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
   sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
 };
