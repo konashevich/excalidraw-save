@@ -16,24 +16,25 @@ import {
   writeDriveManifest,
   downloadFileText,
 } from "./api";
-import { getAccessToken, ensureAccessToken, isGoogleDriveLinked } from "./auth";
+import { getAccessToken, isGoogleDriveLinked } from "./auth";
 import { DriveAuthError, DriveNotConfiguredError } from "./errors";
 
 import type { DriveManifest, DriveSyncResult } from "./types";
 
 export class DriveSyncService {
-  private async assertReady(): Promise<void> {
+  private assertReady(): void {
     if (!isGoogleDriveLinked()) {
       throw new DriveAuthError("Sign in with Google first.");
     }
-    await ensureAccessToken();
     if (!getAccessToken()) {
-      throw new DriveAuthError();
+      throw new DriveAuthError(
+        "Google sign-in expired. Use Backup now or Sign in with Google.",
+      );
     }
   }
 
   async backupVaultToDrive(): Promise<DriveSyncResult> {
-    await this.assertReady();
+    this.assertReady();
 
     return withDriveFolderRetry(() => this.backupVaultToDriveInner());
   }
@@ -109,7 +110,7 @@ export class DriveSyncService {
   }
 
   async restoreVaultFromDrive(): Promise<DriveSyncResult> {
-    await this.assertReady();
+    this.assertReady();
 
     return withDriveFolderRetry(() => this.restoreVaultFromDriveInner());
   }

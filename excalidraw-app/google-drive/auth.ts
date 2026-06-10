@@ -209,9 +209,9 @@ export const signInWithGoogle = async (): Promise<DriveAuthSession> => {
 };
 
 /**
- * Returns a valid access token, silently refreshing when the user linked
- * Google Drive on a previous visit. Tokens live in sessionStorage (~1h);
- * the linked flag in localStorage keeps the user signed in across days.
+ * Returns a valid access token, refreshing via Google OAuth when needed.
+ * Call only from an explicit user action (sign-in, backup, share, etc.) —
+ * background auto-sync must use {@link getAccessToken} instead.
  */
 export const ensureAccessToken = async (): Promise<string> => {
   const existing = getAccessToken();

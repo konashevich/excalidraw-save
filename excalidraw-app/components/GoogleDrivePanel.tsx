@@ -60,14 +60,8 @@ export const GoogleDrivePanel = ({
       return;
     }
     setSignedIn(true);
-    try {
-      await ensureAccessToken();
-      const accountEmail = await getGoogleAccountEmail();
-      setEmail(accountEmail ?? null);
-    } catch {
-      const accountEmail = await getGoogleAccountEmail();
-      setEmail(accountEmail ?? null);
-    }
+    const accountEmail = await getGoogleAccountEmail();
+    setEmail(accountEmail ?? null);
   }, []);
 
   useEffect(() => {
@@ -82,6 +76,7 @@ export const GoogleDrivePanel = ({
     setBusy(true);
     setError(null);
     try {
+      await ensureAccessToken();
       const result = await action();
       setLastSyncAt(result.syncedAt);
       setDriveLastSyncAt(result.syncedAt);
