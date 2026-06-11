@@ -52,6 +52,7 @@ npx wrangler deploy
 
 echo ""
 echo "Deployed. Next:"
-echo "  1. GCP OAuth client → add redirect URI: https://diagrams.free/oauth-callback.html"
+echo "  1. Verify: curl -sS https://api.diagrams.free/health"
 echo "  2. gh secret set VITE_APP_GOOGLE_OAUTH_PROXY_URL -b 'https://api.diagrams.free' -R konashevich/diagrams-free"
 echo "  3. Push to master to rebuild the SPA"
+echo "  See docs/cloudflare-oauth-proxy.md"

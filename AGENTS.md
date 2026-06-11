@@ -95,7 +95,7 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 **Plan (status + agent playbook):** [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md)  
 **OAuth setup:** [docs/google-oauth-setup.md](docs/google-oauth-setup.md)
 
-**Code today:** `excalidraw-app/google-drive/` — auth (OAuth proxy when `VITE_APP_GOOGLE_OAUTH_PROXY_URL` set; else GIS token model), backup/restore, share, auto-sync. **Worker:** `workers/diagrams-free-oauth/`. **OAuth sessions:** [docs/google-drive-oauth-sessions.md](docs/google-drive-oauth-sessions.md).
+**Code today:** `excalidraw-app/google-drive/` — auth (OAuth proxy when `VITE_APP_GOOGLE_OAUTH_PROXY_URL` set; else GIS token model), backup/restore, share, auto-sync. **Worker:** `workers/diagrams-free-oauth/` at `https://api.diagrams.free`. **Docs:** [docs/cloudflare-oauth-proxy.md](docs/cloudflare-oauth-proxy.md) · [docs/google-drive-oauth-sessions.md](docs/google-drive-oauth-sessions.md).
 
 **Concept:**
 
@@ -219,6 +219,7 @@ If `yarn install` fails with `ENOSPC`, set `TMPDIR` and `YARN_CACHE_FOLDER` to a
 |-------|-----|
 | Scene vault design | [docs/scene-vault-design.md](docs/scene-vault-design.md) |
 | Google Drive sync/share plan | [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md) |
+| Cloudflare OAuth proxy | [docs/cloudflare-oauth-proxy.md](docs/cloudflare-oauth-proxy.md) |
 | GitHub Pages / domain | [docs/github-pages-hosting.md](docs/github-pages-hosting.md) |
 | Branding & IP clearance | [docs/diagrams-free-branding-and-ip-clearance.md](docs/diagrams-free-branding-and-ip-clearance.md) |
 | Privacy policy (GA4, Drive, local data) | [public/privacy/index.html](public/privacy/index.html) |
