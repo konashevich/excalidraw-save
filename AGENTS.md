@@ -163,7 +163,7 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 
 **Code:** `excalidraw-app/donate/reminder/` — short `DonateReminderModal`, triggers (30 min active tab time or 2nd+ tab session), once/day cap, 1-month snooze, Stripe return suppress (`kind=once` → 1y, `kind=monthly` → permanent). Optional Drive sync: `diagrams.free/app/donate-reminder-state.json` via existing `drive.file` scope (merge on sign-in / mount). GA4: `donate_reminder_*`, `donate_suppress_applied` in `engagement.ts`.
 
-**Operator:** Re-run `node docs/stripe/create-payment-links.mjs` so live Payment Links include `kind=` on success URLs.
+**Operator:** New links: `node docs/stripe/create-payment-links.mjs` + `bash docs/stripe/sync-github-secrets.sh`. Existing links: `node docs/stripe/update-payment-link-redirects.mjs` (Stripe API only — same `buy.stripe.com` URLs, no redeploy).
 
 ---
 

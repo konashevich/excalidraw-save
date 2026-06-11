@@ -10,12 +10,13 @@ import { flushVaultSync } from "../scene-vault/vaultSync";
 import { useDriveSessionMonitor } from "./useDriveSessionMonitor";
 
 import {
-  DriveApiError,
   driveSyncService,
+  driveAccessRefreshFailedMessage,
   getDriveLastSyncAt,
   getGoogleAccountEmail,
   hasValidAccessToken,
   initDriveAuth,
+  isDriveAccessRefreshError,
   isDriveAutoSyncEnabled,
   isGoogleDriveEnabled,
   isSignedInToGoogle,
@@ -100,11 +101,9 @@ export const GoogleDrivePanel = ({
       onSyncComplete();
     } catch (err) {
       console.error("[google-drive]", err);
-      if (err instanceof DriveApiError && err.status === 401) {
+      if (isDriveAccessRefreshError(err)) {
         setSessionReady(false);
-        setError(
-          "Could not refresh Google access. Try Backup now again, Reconnect Google, or sign out and back in.",
-        );
+        setError(driveAccessRefreshFailedMessage);
       } else {
         setError(
           err instanceof Error ? err.message : "Google Drive sync failed.",

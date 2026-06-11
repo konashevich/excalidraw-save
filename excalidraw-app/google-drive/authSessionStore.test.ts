@@ -24,8 +24,8 @@ describe("authSessionStore", () => {
     await clearDriveAuthSession();
   });
 
-  it("persists and reads a valid session from localStorage", () => {
-    persistDriveAuthSession("token-abc", 3600);
+  it("persists and reads a valid session from localStorage", async () => {
+    await persistDriveAuthSession("token-abc", 3600);
     const session = readSessionFromLocalStorage();
     expect(session?.accessToken).toBe("token-abc");
     expect(session?.expiresAt).toBeGreaterThan(Date.now());

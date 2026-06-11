@@ -150,15 +150,17 @@ export const hydrateDriveAuthSessionFromIdb = async (): Promise<boolean> => {
   return true;
 };
 
-export const persistDriveAuthSession = (
+export const persistDriveAuthSession = async (
   accessToken: string,
   expiresInSeconds: number,
-): StoredDriveSession => {
+): Promise<StoredDriveSession> => {
   const expiresAt = Date.now() + expiresInSeconds * 1000 - 60_000;
   const session = { accessToken, expiresAt };
-  writeSessionToLocalStorage(session);
-  void writeSessionToIdb(session);
-  return session;
+  return enqueueSessionStoreOp(async () => {
+    writeSessionToLocalStorage(session);
+    await writeSessionToIdb(session);
+    return session;
+  });
 };
 
 export const clearDriveAuthSession = async (): Promise<void> => {

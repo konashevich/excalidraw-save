@@ -82,7 +82,11 @@ export {
   registerDriveAutoSyncNotifier,
 } from "./driveAutoSyncNotify";
 
-export { withDriveAccess } from "./withDriveAccess";
+export {
+  driveAccessRefreshFailedMessage,
+  isDriveAccessRefreshError,
+  withDriveAccess,
+} from "./withDriveAccess";
 
 export {
   flushDriveVaultSync,

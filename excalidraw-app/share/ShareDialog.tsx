@@ -21,8 +21,9 @@ import { useEffect, useRef, useState } from "react";
 import { atom, useAtom, useAtomValue } from "../app-jotai";
 import { activeRoomLinkAtom } from "../collab/Collab";
 import {
-  DriveApiError,
+  driveAccessRefreshFailedMessage,
   initDriveAuth,
+  isDriveAccessRefreshError,
   isGoogleDriveLinked,
   signInWithGoogle,
   withDriveAccess,
@@ -217,10 +218,8 @@ const DriveShareSection = ({
       handleClose();
     } catch (err) {
       console.error("[google-drive] share", err);
-      if (err instanceof DriveApiError && err.status === 401) {
-        setError(
-          "Could not refresh Google access. Try again or reconnect Google in My scenes.",
-        );
+      if (isDriveAccessRefreshError(err)) {
+        setError(driveAccessRefreshFailedMessage);
       } else {
         setError(err instanceof Error ? err.message : "Could not create link.");
       }

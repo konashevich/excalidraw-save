@@ -23,23 +23,56 @@ const pendingTokenRequests = new Map<string, Promise<DriveAuthSession>>();
 
 const isGisReady = (): boolean => !!window.google?.accounts?.oauth2;
 
-const waitForGisReady = (
-  resolve: () => void,
-  reject: (error: DriveAuthError) => void,
-): void => {
-  let attempts = 0;
-  const poll = () => {
+const waitForGisReady = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    let attempts = 0;
+    const poll = () => {
+      if (isGisReady()) {
+        resolve();
+        return;
+      }
+      if (++attempts < 50) {
+        setTimeout(poll, 20);
+      } else {
+        reject(new DriveAuthError("Could not load Google sign-in."));
+      }
+    };
+    poll();
+  });
+
+const loadGisScriptInner = async (): Promise<void> => {
+  const existing = document.querySelector(
+    `script[src="${GIS_SCRIPT_URL}"]`,
+  ) as HTMLScriptElement | null;
+
+  if (existing) {
     if (isGisReady()) {
-      resolve();
       return;
     }
-    if (++attempts < 50) {
-      setTimeout(poll, 20);
-    } else {
+    await Promise.race([
+      waitForGisReady(),
+      new Promise<void>((_resolve, reject) => {
+        existing.addEventListener(
+          "error",
+          () => reject(new DriveAuthError("Could not load Google sign-in.")),
+          { once: true },
+        );
+      }),
+    ]);
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = GIS_SCRIPT_URL;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () =>
       reject(new DriveAuthError("Could not load Google sign-in."));
-    }
-  };
-  poll();
+    document.head.appendChild(script);
+  });
+  await waitForGisReady();
 };
 
 const loadGisScript = (): Promise<void> => {
@@ -50,34 +83,9 @@ const loadGisScript = (): Promise<void> => {
     return Promise.resolve();
   }
   if (!gisLoadPromise) {
-    gisLoadPromise = new Promise((resolve, reject) => {
-      const existing = document.querySelector(
-        `script[src="${GIS_SCRIPT_URL}"]`,
-      ) as HTMLScriptElement | null;
-
-      if (existing) {
-        if (isGisReady()) {
-          resolve();
-          return;
-        }
-        existing.addEventListener("load", () =>
-          waitForGisReady(resolve, reject),
-        );
-        existing.addEventListener("error", () =>
-          reject(new DriveAuthError("Could not load Google sign-in.")),
-        );
-        waitForGisReady(resolve, reject);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = GIS_SCRIPT_URL;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => waitForGisReady(resolve, reject);
-      script.onerror = () =>
-        reject(new DriveAuthError("Could not load Google sign-in."));
-      document.head.appendChild(script);
+    gisLoadPromise = loadGisScriptInner().catch((error) => {
+      gisLoadPromise = null;
+      throw error;
     });
   }
   return gisLoadPromise;
@@ -265,7 +273,7 @@ const requestGoogleAccessToken = (
               return;
             }
             const expiresIn = response.expires_in ?? 3600;
-            const session = persistDriveAuthSession(
+            const session = await persistDriveAuthSession(
               response.access_token,
               expiresIn,
             );

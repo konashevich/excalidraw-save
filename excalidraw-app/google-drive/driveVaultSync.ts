@@ -12,6 +12,10 @@ import { DriveApiError } from "./errors";
 
 const DRIVE_SYNC_DEBOUNCE_MS = 2500;
 
+const isDriveAutoSyncAuthError = (error: unknown): boolean =>
+  error instanceof DriveApiError &&
+  (error.status === 401 || error.status === 403);
+
 const debouncedDriveBackup = debounce(() => {
   if (
     !isGoogleDriveEnabled() ||
@@ -28,7 +32,7 @@ const debouncedDriveBackup = debounce(() => {
     })
     .catch((error) => {
       console.error("[google-drive] auto-sync failed:", error);
-      if (error instanceof DriveApiError) {
+      if (isDriveAutoSyncAuthError(error)) {
         notifyDriveAutoSyncFailed();
       }
     });
