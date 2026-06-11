@@ -95,7 +95,7 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 **Plan (status + agent playbook):** [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md)  
 **OAuth setup:** [docs/google-oauth-setup.md](docs/google-oauth-setup.md)
 
-**Code today:** `excalidraw-app/google-drive/` — auth, backup/restore (`DriveSyncService`), `GoogleDrivePanel`. **Not yet:** `DriveShareService`, `#share=`, auto-sync, production secrets.
+**Code today:** `excalidraw-app/google-drive/` — auth (GIS token model, ~1h access tokens), backup/restore, share, auto-sync. **OAuth sessions:** [docs/google-drive-oauth-sessions.md](docs/google-drive-oauth-sessions.md).
 
 **Concept:**
 
