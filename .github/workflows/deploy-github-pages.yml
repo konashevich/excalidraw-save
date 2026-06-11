@@ -44,7 +44,6 @@ jobs:
           VITE_APP_STRIPE_DONATE_MONTHLY_199: ${{ secrets.VITE_APP_STRIPE_DONATE_MONTHLY_199 }}
           VITE_APP_STRIPE_DONATE_MONTHLY_500: ${{ secrets.VITE_APP_STRIPE_DONATE_MONTHLY_500 }}
           VITE_APP_STRIPE_DONATE_MONTHLY_1000: ${{ secrets.VITE_APP_STRIPE_DONATE_MONTHLY_1000 }}
-          VITE_APP_STRIPE_DONATE_MONTHLY_CUSTOM: ${{ secrets.VITE_APP_STRIPE_DONATE_MONTHLY_CUSTOM }}
 
       - name: Add SPA fallback for deep links
         run: cp excalidraw-app/build/index.html excalidraw-app/build/404.html

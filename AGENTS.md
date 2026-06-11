@@ -149,7 +149,7 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 
 | Item | Location / value |
 |------|------------------|
-| Feature flag | `VITE_APP_DONATE_ENABLED=true` + 8 `VITE_APP_STRIPE_DONATE_*` Payment Link URLs (GitHub Actions secrets on deploy) |
+| Feature flag | `VITE_APP_DONATE_ENABLED=true` + 7 `VITE_APP_STRIPE_DONATE_*` Payment Link URLs (GitHub Actions secrets on deploy) |
 | UI | `excalidraw-app/donate/` — menu **Support diagrams.free**, two-column modal |
 | Stripe API keys | `docs/stripe/secrets.env` (gitignored) — **local link creation only**; never in client bundle |
 | Create links | `node docs/stripe/create-payment-links.mjs` → `docs/stripe/generated-vite.env` |
@@ -157,13 +157,15 @@ Implement remaining work per plan §9 (terminal `gcloud` + browser for Console).
 
 **Agent notes:** Static site uses Payment Link redirects only — no `sk_live` in Vite env. Thank-you return: `https://diagrams.free/?donate=thanks&kind=once` or `&kind=monthly` (suppresses donation reminders).
 
-### Donation reminder (implemented)
+### Donation reminder (implemented — scope closed)
 
-**Design doc:** [docs/donate-reminder-plan.md](docs/donate-reminder-plan.md)
+**Design doc:** [docs/donate-reminder-plan.md](docs/donate-reminder-plan.md) — read **Scope lock** first.
 
-**Code:** `excalidraw-app/donate/reminder/` — short `DonateReminderModal`, triggers (30 min active tab time or 2nd+ tab session), once/day cap, 1-month snooze, Stripe return suppress (`kind=once` → 1y, `kind=monthly` → permanent). Optional Drive sync: `diagrams.free/app/donate-reminder-state.json` via existing `drive.file` scope (merge on sign-in / mount). GA4: `donate_reminder_*`, `donate_suppress_applied` in `engagement.ts`.
+**No backend for this feature:** no Stripe webhooks, no Apps Script for payment truth, no “Phase D”. Suppress via return URL `?donate=thanks&kind=once|monthly` only; optional Drive JSON sync (`drive.file`). Monthly cancel in Stripe does **not** clear suppress — accepted limit.
 
-**Operator:** New links: `node docs/stripe/create-payment-links.mjs` + `bash docs/stripe/sync-github-secrets.sh`. Existing links: `node docs/stripe/update-payment-link-redirects.mjs` (Stripe API only — same `buy.stripe.com` URLs, no redeploy).
+**Code:** `excalidraw-app/donate/reminder/`
+
+**Operator:** `node docs/stripe/update-payment-link-redirects.mjs` (fix redirects on existing links). Do not suggest webhook work when reviewing or extending reminders.
 
 ---
 

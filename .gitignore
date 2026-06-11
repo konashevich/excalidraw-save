@@ -28,4 +28,9 @@ html
 meta*.json
 .claude
 .specstory
-docs/stripe
+# Stripe operator secrets & generated output (scripts + *.md in docs/stripe/ are tracked)
+docs/stripe/secrets.env
+docs/stripe/generated-vite.env
+docs/stripe/payment-links.env
+docs/stripe/stripe_backup_code.txt
+docs/stripe/*.pdf

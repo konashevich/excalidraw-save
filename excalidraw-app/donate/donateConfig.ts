@@ -17,7 +17,7 @@ const DONATE_LINK_ENV: Record<DonateKind, Record<DonateTier, string>> = {
     "199": "VITE_APP_STRIPE_DONATE_MONTHLY_199",
     "500": "VITE_APP_STRIPE_DONATE_MONTHLY_500",
     "1000": "VITE_APP_STRIPE_DONATE_MONTHLY_1000",
-    custom: "VITE_APP_STRIPE_DONATE_MONTHLY_CUSTOM",
+    custom: "",
   },
 };
 
@@ -40,7 +40,7 @@ export const buildDonateLinks = (): DonateLinks | null => {
     return null;
   }
 
-  monthly.custom = readEnv(DONATE_LINK_ENV.monthly.custom);
+  monthly.custom = "";
 
   return { once, monthly };
 };
