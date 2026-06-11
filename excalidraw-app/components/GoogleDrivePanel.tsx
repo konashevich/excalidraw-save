@@ -16,11 +16,10 @@ import {
   getGoogleAccountEmail,
   handleDriveAuthFailure,
   hasValidAccessToken,
-  hydrateDriveAuthSession,
+  initDriveAuth,
   isDriveAutoSyncEnabled,
   isGoogleDriveEnabled,
   isSignedInToGoogle,
-  preloadGoogleDriveAuth,
   setDriveAutoSyncEnabled,
   setDriveLastSyncAt,
   signInWithGoogle,
@@ -67,7 +66,7 @@ export const GoogleDrivePanel = ({
       return;
     }
     setSignedIn(true);
-    await hydrateDriveAuthSession();
+    await initDriveAuth();
     setSessionReady(hasValidAccessToken());
     const accountEmail = await getGoogleAccountEmail();
     setEmail(accountEmail ?? null);
@@ -77,7 +76,6 @@ export const GoogleDrivePanel = ({
     if (!isGoogleDriveEnabled()) {
       return;
     }
-    void preloadGoogleDriveAuth();
     void refreshAccount();
   }, [refreshAccount]);
 
@@ -99,6 +97,7 @@ export const GoogleDrivePanel = ({
       console.error("[google-drive]", err);
       if (err instanceof DriveApiError && err.status === 401) {
         handleDriveAuthFailure();
+        setSessionReady(false);
         try {
           await ensureAccessToken();
           setSessionReady(true);
@@ -111,10 +110,10 @@ export const GoogleDrivePanel = ({
           return;
         } catch (retryErr) {
           console.error("[google-drive] retry after 401", retryErr);
-          setSignedIn(false);
           setSessionReady(false);
-          setEmail(null);
-          setError("Google sign-in expired. Please sign in again.");
+          setError(
+            "Could not refresh Google access. Try Backup now again, or sign out and back in.",
+          );
         }
       } else {
         setError(
@@ -146,11 +145,12 @@ export const GoogleDrivePanel = ({
   };
 
   const handleSignOut = () => {
-    signOutFromGoogle();
-    setSignedIn(false);
-    setSessionReady(false);
-    setEmail(null);
-    setError(null);
+    void signOutFromGoogle().then(() => {
+      setSignedIn(false);
+      setSessionReady(false);
+      setEmail(null);
+      setError(null);
+    });
   };
 
   const handleBackup = () => {
@@ -165,6 +165,7 @@ export const GoogleDrivePanel = ({
   };
 
   const isDisabled = disabled || busy;
+  const autoSyncPaused = signedIn && !sessionReady;
 
   return (
     <section className="scene-vault-dialog__drive" aria-label="Google Drive backup">
@@ -197,19 +198,27 @@ export const GoogleDrivePanel = ({
       </p>
 
       {signedIn ? (
-        <label className="scene-vault-dialog__drive-autosync">
-          <input
-            type="checkbox"
-            checked={autoSync}
-            disabled={isDisabled}
-            onChange={(event) => {
-              const enabled = event.target.checked;
-              setAutoSync(enabled);
-              setDriveAutoSyncEnabled(enabled);
-            }}
-          />
-          Auto-sync My scenes to Drive after edits
-        </label>
+        <>
+          <label className="scene-vault-dialog__drive-autosync">
+            <input
+              type="checkbox"
+              checked={autoSync}
+              disabled={isDisabled || autoSyncPaused}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                setAutoSync(enabled);
+                setDriveAutoSyncEnabled(enabled);
+              }}
+            />
+            Auto-sync My scenes to Drive after edits
+          </label>
+          {autoSyncPaused ? (
+            <p className="scene-vault-dialog__drive-hint">
+              Auto-sync is paused until you back up once to refresh Google
+              access.
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       <div className="scene-vault-dialog__drive-actions">

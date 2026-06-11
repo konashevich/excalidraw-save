@@ -14,7 +14,9 @@ const driveAuthStore = createStore("diagrams-free-drive-auth", "session");
 
 const IDB_SESSION_KEY = "oauth-session";
 
-const isValidSession = (session: StoredDriveSession | null): session is StoredDriveSession =>
+const isValidSession = (
+  session: StoredDriveSession | null,
+): session is StoredDriveSession =>
   !!session &&
   !!session.accessToken &&
   Number.isFinite(session.expiresAt) &&
@@ -33,7 +35,11 @@ export const readSessionFromLocalStorage = (): StoredDriveSession | null => {
 
   const expiresAt = Number(expiryRaw);
   const session = { accessToken, expiresAt };
-  return isValidSession(session) ? session : null;
+  if (!isValidSession(session)) {
+    clearSessionFromLocalStorage();
+    return null;
+  }
+  return session;
 };
 
 export const writeSessionToLocalStorage = (session: StoredDriveSession): void => {
@@ -65,16 +71,26 @@ const migrateTokenFromSessionStorage = (): void => {
   if (!legacyToken || !legacyExpiry) {
     return;
   }
-  writeSessionToLocalStorage({
-    accessToken: legacyToken,
-    expiresAt: Number(legacyExpiry),
-  });
+  const expiresAt = Number(legacyExpiry);
+  sessionStorage.removeItem(DRIVE_TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(DRIVE_TOKEN_EXPIRY_STORAGE_KEY);
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    return;
+  }
+  writeSessionToLocalStorage({ accessToken: legacyToken, expiresAt });
 };
 
 export const readSessionFromIdb = async (): Promise<StoredDriveSession | null> => {
   try {
-    const session = (await get<StoredDriveSession>(IDB_SESSION_KEY, driveAuthStore)) ?? null;
-    return isValidSession(session) ? session : null;
+    const session =
+      (await get<StoredDriveSession>(IDB_SESSION_KEY, driveAuthStore)) ?? null;
+    if (!isValidSession(session)) {
+      if (session) {
+        await clearSessionFromIdb();
+      }
+      return null;
+    }
+    return session;
   } catch {
     return null;
   }
@@ -121,7 +137,7 @@ export const persistDriveAuthSession = (
   return session;
 };
 
-export const clearDriveAuthSession = (): void => {
+export const clearDriveAuthSession = async (): Promise<void> => {
   clearSessionFromLocalStorage();
-  void clearSessionFromIdb();
+  await clearSessionFromIdb();
 };

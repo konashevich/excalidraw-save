@@ -9,6 +9,11 @@ export const DEFAULT_DRIVE_ROOT_FOLDER = "diagrams.free";
 
 export const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 
+/** Non-sensitive; enables account email + login_hint for silent re-auth. */
+export const GOOGLE_OPENID_SCOPES = "openid email profile";
+
+export const DRIVE_OAUTH_SCOPES = `${DRIVE_FILE_SCOPE} ${GOOGLE_OPENID_SCOPES}`;
+
 export const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client";
 
 export const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";

@@ -1,8 +1,8 @@
 import {
   DRIVE_ACCOUNT_EMAIL_STORAGE_KEY,
-  DRIVE_FILE_SCOPE,
   DRIVE_FOLDER_CACHE_KEY,
   DRIVE_LINKED_STORAGE_KEY,
+  DRIVE_OAUTH_SCOPES,
   GIS_SCRIPT_URL,
   getGoogleClientId,
   isGoogleDriveEnabled,
@@ -18,27 +18,61 @@ import { DriveAuthError, DriveNotConfiguredError } from "./errors";
 import type { DriveAuthSession } from "./types";
 
 let gisLoadPromise: Promise<void> | null = null;
-let pendingTokenRequest: Promise<DriveAuthSession> | null = null;
+let driveAuthInitPromise: Promise<boolean> | null = null;
+const pendingTokenRequests = new Map<string, Promise<DriveAuthSession>>();
+
+const isGisReady = (): boolean => !!window.google?.accounts?.oauth2;
 
 const loadGisScript = (): Promise<void> => {
   if (typeof window === "undefined") {
     return Promise.reject(new DriveAuthError("Google sign-in requires a browser."));
   }
-  if (window.google?.accounts?.oauth2) {
+  if (isGisReady()) {
     return Promise.resolve();
   }
   if (!gisLoadPromise) {
     gisLoadPromise = new Promise((resolve, reject) => {
       const existing = document.querySelector(
         `script[src="${GIS_SCRIPT_URL}"]`,
-      );
+      ) as HTMLScriptElement | null;
+
+      const finishIfReady = () => {
+        if (isGisReady()) {
+          resolve();
+          return true;
+        }
+        return false;
+      };
+
       if (existing) {
-        existing.addEventListener("load", () => resolve());
+        if (finishIfReady()) {
+          return;
+        }
+        existing.addEventListener("load", () => {
+          if (finishIfReady()) {
+            return;
+          }
+          resolve();
+        });
         existing.addEventListener("error", () =>
           reject(new DriveAuthError("Could not load Google sign-in.")),
         );
+        // `load` does not replay if the script already finished loading.
+        let attempts = 0;
+        const poll = () => {
+          if (finishIfReady()) {
+            return;
+          }
+          if (++attempts < 50) {
+            setTimeout(poll, 20);
+          } else {
+            reject(new DriveAuthError("Could not load Google sign-in."));
+          }
+        };
+        poll();
         return;
       }
+
       const script = document.createElement("script");
       script.src = GIS_SCRIPT_URL;
       script.async = true;
@@ -60,8 +94,21 @@ export const preloadGoogleDriveAuth = (): Promise<void> => {
   return loadGisScript().catch(() => {});
 };
 
-export const hydrateDriveAuthSession = (): Promise<boolean> =>
-  hydrateDriveAuthSessionFromIdb();
+/** Hydrate stored token + preload GIS once per app load. */
+export const initDriveAuth = (): Promise<boolean> => {
+  if (!isGoogleDriveEnabled()) {
+    return Promise.resolve(false);
+  }
+  if (!driveAuthInitPromise) {
+    driveAuthInitPromise = (async () => {
+      void preloadGoogleDriveAuth();
+      return hydrateDriveAuthSessionFromIdb();
+    })();
+  }
+  return driveAuthInitPromise;
+};
+
+export const hydrateDriveAuthSession = (): Promise<boolean> => initDriveAuth();
 
 const readStoredSession = (): DriveAuthSession | null => {
   const session = readSessionFromLocalStorage();
@@ -155,6 +202,9 @@ type RequestTokenOptions = {
   loginHint?: string;
 };
 
+const tokenRequestKey = (options: RequestTokenOptions): string =>
+  `${options.prompt}\0${options.loginHint ?? ""}`;
+
 const isInteractionRequiredError = (error: unknown): boolean => {
   if (!(error instanceof DriveAuthError)) {
     return false;
@@ -171,11 +221,13 @@ const isInteractionRequiredError = (error: unknown): boolean => {
 const requestGoogleAccessToken = (
   options: RequestTokenOptions,
 ): Promise<DriveAuthSession> => {
-  if (pendingTokenRequest) {
-    return pendingTokenRequest;
+  const key = tokenRequestKey(options);
+  const existing = pendingTokenRequests.get(key);
+  if (existing) {
+    return existing;
   }
 
-  pendingTokenRequest = (async () => {
+  const promise = (async () => {
     if (!isGoogleDriveEnabled()) {
       throw new DriveNotConfiguredError();
     }
@@ -190,7 +242,7 @@ const requestGoogleAccessToken = (
       try {
         const tokenClient = window.google!.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: DRIVE_FILE_SCOPE,
+          scope: DRIVE_OAUTH_SCOPES,
           callback: async (response) => {
             if (response.error || !response.access_token) {
               reject(
@@ -236,10 +288,11 @@ const requestGoogleAccessToken = (
       }
     });
   })().finally(() => {
-    pendingTokenRequest = null;
+    pendingTokenRequests.delete(key);
   });
 
-  return pendingTokenRequest;
+  pendingTokenRequests.set(key, promise);
+  return promise;
 };
 
 /** First-time or explicit sign-in (may show Google consent). */
@@ -255,6 +308,8 @@ export const signInWithGoogle = async (): Promise<DriveAuthSession> => {
  * background auto-sync must use {@link getAccessToken} instead.
  */
 export const ensureAccessToken = async (): Promise<string> => {
+  await initDriveAuth();
+
   const existing = getAccessToken();
   if (existing) {
     return existing;
@@ -275,7 +330,7 @@ export const ensureAccessToken = async (): Promise<string> => {
   } catch (error) {
     if (!isInteractionRequiredError(error)) {
       if (error instanceof DriveAuthError) {
-        clearDriveAuthSession();
+        await clearDriveAuthSession();
       }
       throw error;
     }
@@ -289,26 +344,27 @@ export const ensureAccessToken = async (): Promise<string> => {
     return session.accessToken;
   } catch (error) {
     if (error instanceof DriveAuthError) {
-      clearDriveAuthSession();
+      await clearDriveAuthSession();
     }
     throw error;
   }
 };
 
-export const signOutFromGoogle = (): void => {
+export const signOutFromGoogle = async (): Promise<void> => {
   const token = getAccessToken();
   if (token && window.google?.accounts?.oauth2) {
     window.google.accounts.oauth2.revoke(token, () => {});
   }
-  clearDriveAuthSession();
+  await clearDriveAuthSession();
   clearGoogleDriveLinked();
   localStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
   sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
+  driveAuthInitPromise = null;
 };
 
 /** Drop expired token after 401; keep linked state so silent refresh can run. */
 export const handleDriveAuthFailure = (): void => {
-  clearDriveAuthSession();
+  void clearDriveAuthSession();
   localStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
   sessionStorage.removeItem(DRIVE_FOLDER_CACHE_KEY);
 };

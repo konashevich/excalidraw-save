@@ -22,6 +22,7 @@ import { atom, useAtom, useAtomValue } from "../app-jotai";
 import { activeRoomLinkAtom } from "../collab/Collab";
 import {
   ensureAccessToken,
+  initDriveAuth,
   isGoogleDriveLinked,
   signInWithGoogle,
 } from "../google-drive";
@@ -197,6 +198,10 @@ const DriveShareSection = ({
 }) => {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void initDriveAuth();
+  }, []);
 
   const runShare = async () => {
     setBusy(true);

@@ -18,9 +18,9 @@ describe("authSessionStore", () => {
     sessionStorage.clear();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
-    clearDriveAuthSession();
+    await clearDriveAuthSession();
   });
 
   it("persists and reads a valid session from localStorage", () => {
@@ -28,6 +28,17 @@ describe("authSessionStore", () => {
     const session = readSessionFromLocalStorage();
     expect(session?.accessToken).toBe("token-abc");
     expect(session?.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it("clears expired sessions from localStorage on read", () => {
+    localStorage.setItem(DRIVE_TOKEN_STORAGE_KEY, "expired-token");
+    localStorage.setItem(
+      DRIVE_TOKEN_EXPIRY_STORAGE_KEY,
+      String(Date.now() - 1_000),
+    );
+
+    expect(readSessionFromLocalStorage()).toBeNull();
+    expect(localStorage.getItem(DRIVE_TOKEN_STORAGE_KEY)).toBeNull();
   });
 
   it("hydrates localStorage from IndexedDB when localStorage is empty", async () => {

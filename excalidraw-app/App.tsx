@@ -149,16 +149,17 @@ import { ContactUsDialog } from "./contact/ContactUsDialog";
 import { DonateModal } from "./donate/DonateModal";
 import { DonateReminderModal } from "./donate/reminder/DonateReminderModal";
 import {
+  clearExpiredDonateThanksToast,
   DONATE_THANKS_TOAST_KEY,
+  DONATE_THANKS_TOAST_TTL_MS,
 } from "./donate/reminder/donateReminderService";
 import { useDonateReminder } from "./donate/reminder/useDonateReminder";
 import { CONTACT_US_OPEN_EVENT } from "./contact/openContactUs";
 import {
   driveShareService,
-  hydrateDriveAuthSession,
+  initDriveAuth,
   isGoogleDriveEnabled,
   parseShareFileIdFromLocation,
-  preloadGoogleDriveAuth,
 } from "./google-drive";
 import {
   SceneVaultDialog,
@@ -493,8 +494,7 @@ const ExcalidrawWrapper = () => {
     initSessionEngagementTracking();
     trackEvent("load", "frame", getFrame());
     if (isGoogleDriveEnabled()) {
-      void hydrateDriveAuthSession();
-      void preloadGoogleDriveAuth();
+      void initDriveAuth();
     }
     // Delayed so that the app has a time to load the latest SW
     setTimeout(() => {
@@ -525,11 +525,34 @@ const ExcalidrawWrapper = () => {
   }, [excalidrawAPI]);
 
   useEffect(() => {
+    if (!isDonateEnabled()) {
+      return;
+    }
+    const expireStaleToast = () => {
+      clearExpiredDonateThanksToast();
+    };
+    expireStaleToast();
+    const timer = window.setInterval(expireStaleToast, 60_000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!excalidrawAPI || !isDonateEnabled()) {
       return;
     }
     try {
-      if (sessionStorage.getItem(DONATE_THANKS_TOAST_KEY) !== "1") {
+      const raw = sessionStorage.getItem(DONATE_THANKS_TOAST_KEY);
+      if (!raw) {
+        return;
+      }
+      const queuedAt = Number(raw);
+      if (
+        !Number.isFinite(queuedAt) ||
+        Date.now() - queuedAt > DONATE_THANKS_TOAST_TTL_MS
+      ) {
+        sessionStorage.removeItem(DONATE_THANKS_TOAST_KEY);
         return;
       }
       sessionStorage.removeItem(DONATE_THANKS_TOAST_KEY);

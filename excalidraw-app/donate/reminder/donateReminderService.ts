@@ -1,5 +1,8 @@
 import { isDonateEnabled } from "../donateConfig";
-import { isGoogleDriveLinked } from "../../google-drive/auth";
+import {
+  hydrateDriveAuthSession,
+  isGoogleDriveLinked,
+} from "../../google-drive/auth";
 import { isGoogleDriveEnabled } from "../../google-drive/constants";
 
 import {
@@ -16,6 +19,9 @@ import {
 } from "./donateReminderDriveSync";
 
 export const DONATE_THANKS_TOAST_KEY = "diagrams-free-donate-thanks-toast";
+
+/** Drop a queued thank-you toast if the editor never becomes ready. */
+export const DONATE_THANKS_TOAST_TTL_MS = 5 * 60 * 1000;
 
 let donateThanksUrlConsumed = false;
 
@@ -186,12 +192,27 @@ export const consumeDonateThanksUrl = (): DonationKind | null => {
   stripDonateThanksParamsFromUrl();
 
   try {
-    sessionStorage.setItem(DONATE_THANKS_TOAST_KEY, "1");
+    sessionStorage.setItem(DONATE_THANKS_TOAST_KEY, String(Date.now()));
   } catch {
     // ignore
   }
 
   return appliedKind;
+};
+
+export const clearExpiredDonateThanksToast = (): void => {
+  try {
+    const raw = sessionStorage.getItem(DONATE_THANKS_TOAST_KEY);
+    if (!raw) {
+      return;
+    }
+    const queuedAt = Number(raw);
+    if (!Number.isFinite(queuedAt) || Date.now() - queuedAt > DONATE_THANKS_TOAST_TTL_MS) {
+      sessionStorage.removeItem(DONATE_THANKS_TOAST_KEY);
+    }
+  } catch {
+    // ignore
+  }
 };
 
 export const applyDonationSuppress = async (
@@ -206,7 +227,11 @@ export const prepareDonateReminderState = async (): Promise<void> => {
   if (!isDonateEnabled()) {
     return;
   }
-  if (isGoogleDriveEnabled() && isGoogleDriveLinked()) {
+  if (!isGoogleDriveEnabled()) {
+    return;
+  }
+  await hydrateDriveAuthSession();
+  if (isGoogleDriveLinked()) {
     await syncDonateReminderWithDrive();
   }
 };

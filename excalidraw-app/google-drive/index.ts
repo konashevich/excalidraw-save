@@ -1,6 +1,7 @@
 export {
   DEFAULT_DRIVE_ROOT_FOLDER,
   DRIVE_FILE_SCOPE,
+  DRIVE_OAUTH_SCOPES,
   getDriveLastSyncAt,
   getDriveRootFolderName,
   getGoogleApiKey,
@@ -38,6 +39,7 @@ export {
   handleDriveAuthFailure,
   hasValidAccessToken,
   hydrateDriveAuthSession,
+  initDriveAuth,
   isGoogleDriveLinked,
   isSignedInToGoogle,
   preloadGoogleDriveAuth,

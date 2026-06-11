@@ -22,6 +22,27 @@ import type { DriveFolderIds, DriveManifest, DriveSyncLocation } from "./types";
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 
+const isAuthCredentialError = (status: number, message: string): boolean => {
+  if (status !== 401) {
+    return false;
+  }
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("invalid credentials") ||
+    lower.includes("invalid authentication") ||
+    lower.includes("login required") ||
+    lower.includes("unauthorized") ||
+    lower.includes("token has been expired") ||
+    lower.includes("token has been revoked")
+  );
+};
+
+const maybeClearSessionOnAuthError = (status: number, message: string): void => {
+  if (isAuthCredentialError(status, message)) {
+    handleDriveAuthFailure();
+  }
+};
+
 const readFolderCache = (): DriveFolderIds | null => {
   try {
     let raw = localStorage.getItem(DRIVE_FOLDER_CACHE_KEY);
@@ -80,7 +101,7 @@ const driveFetch = async (
       // ignore parse errors
     }
     if (response.status === 401) {
-      handleDriveAuthFailure();
+      maybeClearSessionOnAuthError(response.status, message);
     }
     if (response.status === 404 && readFolderCache()) {
       clearDriveFolderCache();
@@ -267,13 +288,13 @@ export const uploadTextFile = async (options: {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      handleDriveAuthFailure();
-    }
     const message = await parseDriveErrorMessage(
       response,
       `Upload failed (${response.status})`,
     );
+    if (response.status === 401) {
+      maybeClearSessionOnAuthError(response.status, message);
+    }
     throw new DriveApiError(message, response.status);
   }
 
