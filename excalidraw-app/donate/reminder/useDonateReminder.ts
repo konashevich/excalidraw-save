@@ -21,6 +21,7 @@ import {
   applyDonateReminderSnoozeMonth,
   bumpDonateReminderSessionCount,
   consumeDonateThanksUrl,
+  DONATE_REMINDER_MIN_SESSION_COUNT,
   getReminderEligibility,
   markDonateReminderShownLocal,
   persistDonateReminderShownToDrive,
@@ -136,7 +137,10 @@ export const useDonateReminder = ({ onOpenDonateModal }: Options) => {
     bumpDonateReminderSessionCount();
 
     const state = readLocalDonateReminderState();
-    if (!secondSessionCheckedRef.current && state.sessionCount >= 2) {
+    if (
+      !secondSessionCheckedRef.current &&
+      state.sessionCount >= DONATE_REMINDER_MIN_SESSION_COUNT
+    ) {
       secondSessionCheckedRef.current = true;
       showReminder("trigger_second_session");
     }

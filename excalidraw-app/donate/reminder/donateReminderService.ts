@@ -29,6 +29,9 @@ export type ReminderTrigger = "trigger_30m" | "trigger_second_session";
 
 export type DonationKind = "once" | "monthly";
 
+/** Tab sessions before the visit-based donation reminder can show. */
+export const DONATE_REMINDER_MIN_SESSION_COUNT = 5;
+
 const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -86,7 +89,10 @@ export const getReminderEligibility = (
   if (options.trigger30mReady) {
     return "trigger_30m";
   }
-  if (options.checkSecondSession && state.sessionCount >= 2) {
+  if (
+    options.checkSecondSession &&
+    state.sessionCount >= DONATE_REMINDER_MIN_SESSION_COUNT
+  ) {
     return "trigger_second_session";
   }
   return null;

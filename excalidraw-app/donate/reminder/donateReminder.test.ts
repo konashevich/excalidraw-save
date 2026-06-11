@@ -6,6 +6,7 @@ import {
 } from "./donateReminderState";
 import {
   consumeDonateThanksUrl,
+  DONATE_REMINDER_MIN_SESSION_COUNT,
   DONATE_THANKS_TOAST_KEY,
   getReminderEligibility,
   isDonateReminderSuppressed,
@@ -89,7 +90,13 @@ describe("getReminderEligibility", () => {
     const state = readLocalDonateReminderState();
     expect(
       getReminderEligibility(
-        { ...state, sessionCount: 2 },
+        { ...state, sessionCount: DONATE_REMINDER_MIN_SESSION_COUNT - 1 },
+        { trigger30mReady: false, checkSecondSession: true },
+      ),
+    ).toBeNull();
+    expect(
+      getReminderEligibility(
+        { ...state, sessionCount: DONATE_REMINDER_MIN_SESSION_COUNT },
         { trigger30mReady: false, checkSecondSession: true },
       ),
     ).toBe("trigger_second_session");
