@@ -9,8 +9,8 @@ import { DriveAuthError } from "./errors";
 import type { DriveAuthSession } from "./types";
 
 const PKCE_VERIFIER_KEY = "diagrams-free:oauth-pkce-verifier";
-/** Must match an authorized redirect URI in GCP (https://diagrams.free/). */
-const OAUTH_CALLBACK_PATH = "/";
+/** Must match an authorized redirect URI in GCP (https://diagrams.free/oauth-callback.html). */
+const OAUTH_CALLBACK_PATH = "/oauth-callback.html";
 
 export const isOAuthProxyEnabled = (): boolean => !!getGoogleOAuthProxyUrl();
 

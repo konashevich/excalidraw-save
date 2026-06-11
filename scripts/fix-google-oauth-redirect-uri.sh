@@ -12,7 +12,7 @@ Google Drive sign-in — fix redirect_uri_mismatch
 
 The app sends this redirect URI (must match GCP exactly):
 
-  https://diagrams.free/
+  https://diagrams.free/oauth-callback.html
 
 1. Open OAuth client (konoshevich@gmail.com):
 
@@ -24,11 +24,10 @@ The app sends this redirect URI (must match GCP exactly):
 
 3. Under "Authorized redirect URIs" add:
 
-   https://diagrams.free/
    https://diagrams.free/oauth-callback.html
 
-   (Trailing slash on the first URI matters — Google treats it as different from
-   https://diagrams.free without slash.)
+   Google treats URIs as exact strings — https://diagrams.free/ (with slash) is NOT
+   the same as https://diagrams.free (without slash).
 
 4. Save. Changes can take a few minutes.
 

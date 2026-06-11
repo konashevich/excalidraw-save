@@ -14,7 +14,7 @@ if [[ -z "$CLIENT_ID" ]]; then
   echo "  https://console.cloud.google.com/auth/clients?project=diagrams-free"
   echo ""
   echo "Authorized JavaScript origins: https://diagrams.free"
-  echo "Authorized redirect URIs:      https://diagrams.free/"
+  echo "Authorized redirect URIs:      https://diagrams.free/oauth-callback.html"
   echo ""
   echo "Or copy the auto-created Firebase Web client from:"
   echo "  https://console.cloud.google.com/apis/credentials?project=diagrams-free"
