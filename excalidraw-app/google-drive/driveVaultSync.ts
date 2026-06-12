@@ -10,45 +10,15 @@ import { driveSyncService } from "./DriveSyncService";
 import { getAccessToken, isGoogleDriveLinked, tryRefreshAccessToken } from "./auth";
 import { DriveApiError } from "./errors";
 
+import type { DriveSyncResult } from "./types";
+
 const DRIVE_SYNC_DEBOUNCE_MS = 2500;
 
 const isDriveAutoSyncAuthError = (error: unknown): boolean =>
   error instanceof DriveApiError &&
   (error.status === 401 || error.status === 403);
 
-const debouncedDriveBackup = debounce(() => {
-  if (
-    !isGoogleDriveEnabled() ||
-    !isGoogleDriveLinked() ||
-    !isDriveAutoSyncEnabled()
-  ) {
-    return;
-  }
-  void (async () => {
-    if (!(await tryRefreshAccessToken()) || !getAccessToken()) {
-      return;
-    }
-    return driveSyncService
-    .backupVaultToDrive()
-    .then((result) => {
-      setDriveLastSyncAt(result.syncedAt);
-    })
-    .catch((error) => {
-      console.error("[google-drive] auto-sync failed:", error);
-      if (isDriveAutoSyncAuthError(error)) {
-        notifyDriveAutoSyncFailed();
-      }
-    });
-  })();
-}, DRIVE_SYNC_DEBOUNCE_MS);
-
-export const scheduleDriveVaultSync = (): void => {
-  debouncedDriveBackup();
-};
-
-/** Flush debounced backup and run an immediate backup when Drive auto-sync is on. */
-export const flushDriveVaultSync = async (): Promise<void> => {
-  debouncedDriveBackup.flush();
+const runDriveVaultBackup = async (): Promise<DriveSyncResult | undefined> => {
   if (
     !isGoogleDriveEnabled() ||
     !isGoogleDriveLinked() ||
@@ -62,10 +32,30 @@ export const flushDriveVaultSync = async (): Promise<void> => {
   try {
     const result = await driveSyncService.backupVaultToDrive();
     setDriveLastSyncAt(result.syncedAt);
+    return result;
   } catch (error) {
-    console.error("[google-drive] flush backup failed:", error);
-    if (error instanceof DriveApiError) {
+    console.error("[google-drive] auto-sync failed:", error);
+    if (isDriveAutoSyncAuthError(error)) {
       notifyDriveAutoSyncFailed();
     }
+    throw error;
+  }
+};
+
+const debouncedDriveBackup = debounce(() => {
+  void runDriveVaultBackup();
+}, DRIVE_SYNC_DEBOUNCE_MS);
+
+export const scheduleDriveVaultSync = (): void => {
+  debouncedDriveBackup();
+};
+
+/** Flush debounced backup and run a single immediate backup when Drive auto-sync is on. */
+export const flushDriveVaultSync = async (): Promise<void> => {
+  debouncedDriveBackup.cancel();
+  try {
+    await runDriveVaultBackup();
+  } catch {
+    // runDriveVaultBackup already logs and notifies on auth errors
   }
 };

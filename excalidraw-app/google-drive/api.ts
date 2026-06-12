@@ -339,12 +339,15 @@ export const writeDriveManifest = async (
   manifest: DriveManifest,
   existingFileId?: string | null,
 ): Promise<string> => {
+  const resolvedFileId =
+    existingFileId ??
+    (await findFileInParent(vaultFolderId, DRIVE_MANIFEST_FILENAME));
   return uploadTextFile({
     parentId: vaultFolderId,
     name: DRIVE_MANIFEST_FILENAME,
     content: JSON.stringify(manifest, null, 2),
     mimeType: "application/json",
-    existingFileId,
+    existingFileId: resolvedFileId,
   });
 };
 
@@ -354,11 +357,15 @@ export const uploadVaultSceneFile = async (options: {
   content: string;
   existingFileId?: string | null;
 }): Promise<string> => {
+  const name = driveSceneFilename(options.sceneId);
+  const resolvedFileId =
+    options.existingFileId ??
+    (await findFileInParent(options.scenesFolderId, name));
   return uploadTextFile({
     parentId: options.scenesFolderId,
-    name: driveSceneFilename(options.sceneId),
+    name,
     content: options.content,
-    existingFileId: options.existingFileId,
+    existingFileId: resolvedFileId,
   });
 };
 

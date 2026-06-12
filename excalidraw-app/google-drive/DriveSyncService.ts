@@ -22,6 +22,9 @@ import { DriveAuthError, DriveNotConfiguredError } from "./errors";
 import type { DriveManifest, DriveSyncResult } from "./types";
 
 export class DriveSyncService {
+  /** Serialize backups so overlapping auto-sync / flush calls cannot race. */
+  private backupTail: Promise<unknown> = Promise.resolve();
+
   private assertReady(): void {
     if (!isGoogleDriveLinked()) {
       throw new DriveAuthError("Sign in with Google first.");
@@ -36,7 +39,14 @@ export class DriveSyncService {
   async backupVaultToDrive(): Promise<DriveSyncResult> {
     this.assertReady();
 
-    return withDriveFolderRetry(() => this.backupVaultToDriveInner());
+    const resultPromise = this.backupTail.then(() =>
+      withDriveFolderRetry(() => this.backupVaultToDriveInner()),
+    );
+    this.backupTail = resultPromise.then(
+      () => undefined,
+      () => undefined,
+    );
+    return resultPromise;
   }
 
   private async backupVaultToDriveInner(): Promise<DriveSyncResult> {
