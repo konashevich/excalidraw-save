@@ -233,8 +233,9 @@ export const GoogleDrivePanel = ({
       <h3 className="scene-vault-dialog__drive-title">Google Drive</h3>
       <p className="scene-vault-dialog__drive-hint">
         Back up and merge <strong>My scenes</strong> with your Google Drive
-        under <code>diagrams.free/vault/</code>. Changes on another device
-        appear after you sync or return to this tab.
+        under <code>diagrams.free/vault/</code>. Returning to this tab or
+        clicking Sync merges changes from other devices. Auto-backup only
+        controls pushing edits to Drive.
       </p>
 
       {signedIn ? (

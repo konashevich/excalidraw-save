@@ -630,7 +630,6 @@ const ExcalidrawWrapper = () => {
   useDriveAutoMerge({
     excalidrawAPI,
     enabled: sceneVaultEnabled && isGoogleDriveEnabled(),
-    confirmActiveSceneReload,
   });
 
   useEffect(() => {

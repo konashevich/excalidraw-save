@@ -184,24 +184,58 @@ export const flatDriveSyncLocation = (
   folders: DriveFolderIds,
 ): DriveSyncLocation => nestedDriveSyncLocation(folders);
 
+/** Prefer the manifest with more scenes; tie-break by newer updatedAt. */
+export const pickBestDriveSyncLocation = (
+  candidates: { location: DriveSyncLocation; manifest: DriveManifest | null }[],
+): DriveSyncLocation | null => {
+  if (candidates.length === 0) {
+    return null;
+  }
+  const score = (manifest: DriveManifest | null): [number, number] => {
+    if (!manifest) {
+      return [-1, 0];
+    }
+    return [manifest.scenes.length, manifest.updatedAt ?? 0];
+  };
+  candidates.sort((a, b) => {
+    const [scenesB, updatedAtB] = score(b.manifest);
+    const [scenesA, updatedAtA] = score(a.manifest);
+    if (scenesB !== scenesA) {
+      return scenesB - scenesA;
+    }
+    return updatedAtB - updatedAtA;
+  });
+  return candidates[0].location;
+};
+
 /** Read location for existing backups (nested, flat root, or legacy vault/scenes). */
 export const resolveDriveSyncLocation = async (
   folders: DriveFolderIds,
 ): Promise<DriveSyncLocation> => {
   const { rootId, vaultId, scenesId } = folders;
+  const candidates: {
+    location: DriveSyncLocation;
+    manifest: DriveManifest | null;
+  }[] = [];
 
   if (
     vaultId &&
     (await findFileInParent(vaultId, DRIVE_MANIFEST_FILENAME))
   ) {
-    return {
-      manifestFolderId: vaultId,
-      scenesFolderId: scenesId ?? vaultId,
-    };
+    candidates.push({
+      location: {
+        manifestFolderId: vaultId,
+        scenesFolderId: scenesId ?? vaultId,
+      },
+      manifest: await readDriveManifest(vaultId),
+    });
   }
 
   if (await findFileInParent(rootId, DRIVE_MANIFEST_FILENAME)) {
-    return { manifestFolderId: rootId, scenesFolderId: rootId };
+    candidates.push({
+      location: { manifestFolderId: rootId, scenesFolderId: rootId },
+      manifest: await readDriveManifest(rootId),
+    });
   }
 
   const legacyVaultId = await findChildFolder(rootId, DRIVE_VAULT_FOLDER);
@@ -213,10 +247,18 @@ export const resolveDriveSyncLocation = async (
     const legacyScenesId =
       (await findChildFolder(legacyVaultId, DRIVE_SCENES_FOLDER)) ??
       legacyVaultId;
-    return { manifestFolderId: legacyVaultId, scenesFolderId: legacyScenesId };
+    candidates.push({
+      location: {
+        manifestFolderId: legacyVaultId,
+        scenesFolderId: legacyScenesId,
+      },
+      manifest: await readDriveManifest(legacyVaultId),
+    });
   }
 
-  return nestedDriveSyncLocation(folders);
+  return (
+    pickBestDriveSyncLocation(candidates) ?? nestedDriveSyncLocation(folders)
+  );
 };
 
 export const ensureDriveFolderStructure = async (): Promise<DriveFolderIds> => {

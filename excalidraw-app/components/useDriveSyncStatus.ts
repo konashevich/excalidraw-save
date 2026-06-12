@@ -9,8 +9,11 @@ import {
   invalidateDriveRemoteManifestCache,
   peekDriveRemoteManifest,
 } from "../google-drive/driveSyncStatus";
-import { getDriveRemoteManifestAt } from "../google-drive";
-import { isGoogleDriveEnabled } from "../google-drive";
+import {
+  getDriveRemoteManifestAt,
+  isGoogleDriveEnabled,
+  isGoogleDriveLinked,
+} from "../google-drive";
 
 import type { DriveSyncStatus } from "../google-drive/types";
 
@@ -23,7 +26,7 @@ export const useDriveSyncStatus = (options?: {
   const [remoteManifestAt, setRemoteManifestAt] = useState<number | null>(null);
 
   const refreshRemote = useCallback(async () => {
-    if (!isGoogleDriveEnabled()) {
+    if (!isGoogleDriveEnabled() || !isGoogleDriveLinked()) {
       return;
     }
     const remoteAt = await peekDriveRemoteManifest();
@@ -37,7 +40,12 @@ export const useDriveSyncStatus = (options?: {
     );
     void refreshRemote();
     const interval = window.setInterval(() => {
-      void refreshRemote();
+      if (
+        document.visibilityState === "visible" &&
+        isGoogleDriveLinked()
+      ) {
+        void refreshRemote();
+      }
     }, REMOTE_PEEK_INTERVAL_MS);
     const onVisible = () => {
       if (document.visibilityState === "visible") {

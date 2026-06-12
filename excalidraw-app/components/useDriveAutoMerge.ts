@@ -5,7 +5,6 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 import {
   driveMergeService,
-  isDriveAutoSyncEnabled,
   isGoogleDriveEnabled,
   isGoogleDriveLinked,
   notifyDriveAutoMergeSuccess,
@@ -17,18 +16,14 @@ const AUTO_MERGE_INTERVAL_MS = 5 * 60 * 1000;
 type Options = {
   excalidrawAPI: ExcalidrawImperativeAPI | null;
   enabled: boolean;
-  confirmActiveSceneReload?: () => Promise<boolean>;
 };
 
 export const useDriveAutoMerge = ({
   excalidrawAPI,
   enabled,
-  confirmActiveSceneReload,
 }: Options): void => {
   const lastMergeAtRef = useRef(0);
   const mergingRef = useRef(false);
-  const confirmRef = useRef(confirmActiveSceneReload);
-  confirmRef.current = confirmActiveSceneReload;
 
   useEffect(() => {
     if (!enabled || !isGoogleDriveEnabled() || !excalidrawAPI) {
@@ -36,11 +31,7 @@ export const useDriveAutoMerge = ({
     }
 
     const runMerge = async (options?: { force?: boolean }) => {
-      if (
-        !isGoogleDriveLinked() ||
-        !isDriveAutoSyncEnabled() ||
-        mergingRef.current
-      ) {
+      if (!isGoogleDriveLinked() || mergingRef.current) {
         return;
       }
       const now = Date.now();
@@ -53,10 +44,7 @@ export const useDriveAutoMerge = ({
       mergingRef.current = true;
       try {
         const result = await withDriveAccess(() =>
-          driveMergeService.mergeVaultWithDrive({
-            excalidrawAPI,
-            confirmActiveSceneReload: confirmRef.current,
-          }),
+          driveMergeService.mergeVaultWithDrive({ excalidrawAPI }),
         );
         lastMergeAtRef.current = Date.now();
         if (

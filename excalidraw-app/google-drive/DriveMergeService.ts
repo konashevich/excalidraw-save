@@ -56,7 +56,6 @@ export class DriveMergeService {
     setDriveRemoteManifestAt(syncedAt);
     invalidateDriveRemoteManifestCache();
     setDriveLastPushAt(syncedAt);
-    setDriveLastPushRevision(getVaultContentRevision());
 
     let activeSceneNeedsReload: string | null = null;
     const activeSceneId = await sceneVaultStore.getActiveSceneId();
@@ -76,6 +75,8 @@ export class DriveMergeService {
         activeSceneNeedsReload = activeSceneId;
       }
     }
+
+    setDriveLastPushRevision(getVaultContentRevision());
 
     return {
       pulled: pull.restoredScenes,
