@@ -50,4 +50,17 @@ describe("driveVaultSync", () => {
 
     expect(backupVaultToDrive).toHaveBeenCalledTimes(1);
   });
+
+  it("does not reject when auto-sync backup fails", async () => {
+    backupVaultToDrive.mockRejectedValue(new Error("network"));
+    const { scheduleDriveVaultSync, flushDriveVaultSync } = await import(
+      "./driveVaultSync"
+    );
+
+    vi.useFakeTimers();
+    scheduleDriveVaultSync();
+    await vi.advanceTimersByTimeAsync(2500);
+    await expect(flushDriveVaultSync()).resolves.toBeUndefined();
+    vi.useRealTimers();
+  });
 });

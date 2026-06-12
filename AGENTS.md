@@ -92,8 +92,7 @@ When the flag is `false`, behavior matches upstream Excalidraw.
 
 **GCP project:** `diagrams-free` · **Console account:** `konashevich@gmail.com` · **Support:** `support@diagrams.free`
 
-**Plan (status + agent playbook):** [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md) *(if present)*  
-**Google integration (canonical):** [docs/google-oauth/README.md](docs/google-oauth/README.md) — GCP, Cloudflare proxy, app, credentials, troubleshooting
+**Google Drive + OAuth (canonical):** [docs/google-oauth/README.md](docs/google-oauth/README.md)
 
 **Code today:** `excalidraw-app/google-drive/` — auth (OAuth proxy when `VITE_APP_GOOGLE_OAUTH_PROXY_URL` set; else GIS token model), backup/restore, share, auto-sync. **Worker:** `workers/diagrams-free-oauth/` at `https://api.diagrams.free`.
 
@@ -218,8 +217,7 @@ If `yarn install` fails with `ENOSPC`, set `TMPDIR` and `YARN_CACHE_FOLDER` to a
 | Topic | Doc |
 |-------|-----|
 | Scene vault design | [docs/scene-vault-design.md](docs/scene-vault-design.md) |
-| Google Drive sync/share plan | [docs/google-drive-sync-and-share-plan.md](docs/google-drive-sync-and-share-plan.md) |
-| Google OAuth + Cloudflare proxy | [docs/google-oauth/README.md](docs/google-oauth/README.md) |
+| Google Drive + OAuth | [docs/google-oauth/README.md](docs/google-oauth/README.md) |
 | GitHub Pages / domain | [docs/github-pages-hosting.md](docs/github-pages-hosting.md) |
 | Branding & IP clearance | [docs/diagrams-free-branding-and-ip-clearance.md](docs/diagrams-free-branding-and-ip-clearance.md) |
 | Privacy policy (GA4, Drive, local data) | [public/privacy/index.html](public/privacy/index.html) |

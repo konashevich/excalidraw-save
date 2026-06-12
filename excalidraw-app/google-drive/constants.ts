@@ -1,4 +1,4 @@
-/** Google Drive sync — gated by env (see docs/google-drive-sync-and-share-plan.md). */
+/** Google Drive sync — gated by env (see docs/google-oauth/README.md). */
 
 export const GOOGLE_DRIVE_ENV_KEY = "VITE_APP_GOOGLE_DRIVE";
 export const GOOGLE_CLIENT_ID_ENV_KEY = "VITE_APP_GOOGLE_CLIENT_ID";

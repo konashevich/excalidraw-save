@@ -21,7 +21,7 @@ GOOGLE_CLIENT_SECRET is not set.
 Save OAuth client JSON from GCP to:
   docs/google-oauth/client_secret_*.json
 
-Or create docs/google-oauth/secrets.env (see secrets.env.example).
+Or create docs/google-oauth/secrets.env with GOOGLE_CLIENT_SECRET=GOCSPX-...
 
 Then run: ./scripts/set-google-oauth-worker-secret.sh
 EOF

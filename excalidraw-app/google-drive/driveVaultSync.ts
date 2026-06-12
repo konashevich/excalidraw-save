@@ -38,7 +38,6 @@ const runDriveVaultBackup = async (): Promise<DriveSyncResult | undefined> => {
     if (isDriveAutoSyncAuthError(error)) {
       notifyDriveAutoSyncFailed();
     }
-    throw error;
   }
 };
 
@@ -53,9 +52,5 @@ export const scheduleDriveVaultSync = (): void => {
 /** Flush debounced backup and run a single immediate backup when Drive auto-sync is on. */
 export const flushDriveVaultSync = async (): Promise<void> => {
   debouncedDriveBackup.cancel();
-  try {
-    await runDriveVaultBackup();
-  } catch {
-    // runDriveVaultBackup already logs and notifies on auth errors
-  }
+  await runDriveVaultBackup();
 };
