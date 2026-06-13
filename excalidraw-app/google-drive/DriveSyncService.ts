@@ -20,6 +20,7 @@ import {
   manifestScenesEqual,
   mergeDriveManifests,
 } from "./driveManifest";
+import { cleanupDriveVaultOrphans } from "./driveGarbageCollect";
 import {
   getVaultContentRevision,
   setDriveLastPushAt,
@@ -147,6 +148,19 @@ export class DriveSyncService {
       setDriveLastPushAt(syncedAt);
     }
     setDriveLastPushRevision(getVaultContentRevision());
+
+    if (nextScenes.length > 0 || manifestChanged) {
+      try {
+        await cleanupDriveVaultOrphans({
+          folders,
+          writeLocation,
+          scenes: nextScenes,
+          manifestFileId,
+        });
+      } catch (error) {
+        console.warn("[google-drive] Drive garbage collection failed:", error);
+      }
+    }
 
     return {
       uploadedScenes,

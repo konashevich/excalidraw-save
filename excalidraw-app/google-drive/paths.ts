@@ -13,5 +13,15 @@ export const DONATE_REMINDER_STATE_FILENAME = "donate-reminder-state.json";
 export const driveSceneFilename = (sceneId: string): string =>
   `${sceneId}.excalidraw`;
 
+export const sceneIdFromDriveSceneFilename = (
+  filename: string,
+): string | null => {
+  if (!filename.endsWith(".excalidraw")) {
+    return null;
+  }
+  const sceneId = filename.slice(0, -".excalidraw".length);
+  return sceneId.length > 0 ? sceneId : null;
+};
+
 export const driveSharedFilename = (shareId: string): string =>
   `${shareId}.excalidraw`;

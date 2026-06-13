@@ -383,6 +383,60 @@ export const downloadFileText = async (fileId: string): Promise<string> => {
   return response.text();
 };
 
+export type DriveListedFile = {
+  id: string;
+  name: string;
+};
+
+/** List non-trashed files in a folder (paginated). */
+export const listFilesInParent = async (
+  parentId: string,
+): Promise<DriveListedFile[]> => {
+  const files: DriveListedFile[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const q = encodeURIComponent(`'${parentId}' in parents and trashed=false`);
+    const pageTokenQuery = pageToken
+      ? `&pageToken=${encodeURIComponent(pageToken)}`
+      : "";
+    const response = await driveFetch(
+      `/files?q=${q}&fields=nextPageToken,files(id,name)&pageSize=200&spaces=drive${pageTokenQuery}`,
+    );
+    const data = (await response.json()) as {
+      files?: DriveListedFile[];
+      nextPageToken?: string;
+    };
+    if (data.files?.length) {
+      files.push(...data.files);
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return files;
+};
+
+export const trashDriveFile = async (fileId: string): Promise<void> => {
+  await driveFetch(`/files/${fileId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ trashed: true }),
+  });
+};
+
+export const trashDriveFiles = async (fileIds: string[]): Promise<number> => {
+  const uniqueIds = [...new Set(fileIds)];
+  let trashed = 0;
+  for (const fileId of uniqueIds) {
+    try {
+      await trashDriveFile(fileId);
+      trashed += 1;
+    } catch (error) {
+      console.warn("[google-drive] could not trash Drive file:", fileId, error);
+    }
+  }
+  return trashed;
+};
+
 export const readDriveManifest = async (
   vaultFolderId: string,
 ): Promise<DriveManifest | null> => {
