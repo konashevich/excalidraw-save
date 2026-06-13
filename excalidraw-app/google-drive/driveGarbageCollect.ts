@@ -56,11 +56,15 @@ export const shouldPruneFlatLegacy = (
 export const collectLegacyFlatSceneFileIds = (
   files: { id: string; name: string }[],
   nestedSceneIds: Set<string>,
+  retainedFileIds?: Set<string>,
 ): string[] =>
   files
     .filter((file) => {
       const sceneId = sceneIdFromDriveSceneFilename(file.name);
-      return sceneId != null && nestedSceneIds.has(sceneId);
+      if (sceneId == null || !nestedSceneIds.has(sceneId)) {
+        return false;
+      }
+      return !retainedFileIds?.has(file.id);
     })
     .map((file) => file.id);
 
@@ -89,31 +93,39 @@ export const cleanupDriveVaultOrphans = async (options: {
 
   if (
     writeLocation.manifestFolderId === folders.vaultId &&
-    shouldPruneFlatLegacy(flatManifest, scenes)
+    nestedSceneIds.size > 0
   ) {
     const legacyFileIds: string[] = [];
 
-    const flatManifestFileId = await findManifestFileId(folders.rootId);
-    if (flatManifestFileId) {
-      legacyFileIds.push(flatManifestFileId);
-    }
-
     const rootFiles = await listFilesInParent(folders.rootId);
     legacyFileIds.push(
-      ...collectLegacyFlatSceneFileIds(rootFiles, nestedSceneIds),
+      ...collectLegacyFlatSceneFileIds(
+        rootFiles,
+        nestedSceneIds,
+        retainedFileIds,
+      ),
     );
 
     if (writeLocation.scenesFolderId !== folders.vaultId) {
       const vaultRootFiles = await listFilesInParent(folders.vaultId);
       legacyFileIds.push(
-        ...collectLegacyFlatSceneFileIds(vaultRootFiles, nestedSceneIds).filter(
-          (fileId) => !retainedFileIds.has(fileId) && fileId !== manifestFileId,
+        ...collectLegacyFlatSceneFileIds(
+          vaultRootFiles,
+          nestedSceneIds,
+          retainedFileIds,
         ),
       );
     }
 
+    if (shouldPruneFlatLegacy(flatManifest, scenes)) {
+      const flatManifestFileId = await findManifestFileId(folders.rootId);
+      if (flatManifestFileId) {
+        legacyFileIds.push(flatManifestFileId);
+      }
+    }
+
     trashedLegacyFiles = await trashDriveFiles(
-      legacyFileIds.filter((fileId) => fileId !== manifestFileId),
+      [...new Set(legacyFileIds)].filter((fileId) => fileId !== manifestFileId),
     );
   }
 

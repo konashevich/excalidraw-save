@@ -497,6 +497,13 @@ export const uploadVaultSceneFile = async (options: {
   });
 };
 
+/** Scene file in a folder, if present (used to avoid PATCHing flat-root copies). */
+export const findSceneFileInFolder = async (
+  folderId: string,
+  sceneId: string,
+): Promise<string | null> =>
+  findFileInParent(folderId, driveSceneFilename(sceneId));
+
 export const createEmptyManifest = (): DriveManifest => ({
   version: DRIVE_MANIFEST_VERSION,
   updatedAt: Date.now(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { manifestScenesEqual, mergeDriveManifests } from "./driveManifest";
+import { manifestScenesEqual, manifestScenesForLocalIds, mergeDriveManifests } from "./driveManifest";
 
 import type { DriveManifest } from "./types";
 
@@ -57,5 +57,21 @@ describe("manifestScenesEqual", () => {
   it("returns true for identical scene lists", () => {
     const scenes = manifest([entry("a", 100), entry("b", 200)]).scenes;
     expect(manifestScenesEqual(scenes, [...scenes])).toBe(true);
+  });
+});
+
+describe("manifestScenesForLocalIds", () => {
+  it("ignores flat-only scenes when comparing write manifest", () => {
+    const writeManifest = manifest([entry("a", 100), entry("b", 100)]);
+    const merged = mergeDriveManifests(
+      writeManifest,
+      manifest([entry("a", 100), entry("b", 100), entry("c", 100)]),
+    );
+    const localIds = new Set(["a", "b"]);
+    const nextScenes = manifestScenesForLocalIds(writeManifest, localIds);
+    const priorWriteScenes = manifestScenesForLocalIds(writeManifest, localIds);
+
+    expect(manifestScenesEqual(nextScenes, priorWriteScenes)).toBe(true);
+    expect(manifestScenesEqual(nextScenes, merged!.scenes)).toBe(false);
   });
 });

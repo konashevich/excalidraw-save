@@ -60,4 +60,13 @@ describe("driveGarbageCollect helpers", () => {
     );
     expect(ids).toEqual(["flat-a"]);
   });
+
+  it("skips retained flat scene files during legacy cleanup", () => {
+    const ids = collectLegacyFlatSceneFileIds(
+      [{ id: "flat-a", name: "a.excalidraw" }],
+      new Set(["a"]),
+      new Set(["flat-a"]),
+    );
+    expect(ids).toEqual([]);
+  });
 });

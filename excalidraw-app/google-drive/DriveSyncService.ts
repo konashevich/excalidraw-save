@@ -8,6 +8,7 @@ import {
   createEmptyManifest,
   ensureDriveFolderStructure,
   findManifestFileId,
+  findSceneFileInFolder,
   nestedDriveSyncLocation,
   readDriveManifest,
   resolveDriveSyncLocation,
@@ -18,6 +19,7 @@ import {
 } from "./api";
 import {
   manifestScenesEqual,
+  manifestScenesForLocalIds,
   mergeDriveManifests,
 } from "./driveManifest";
 import { cleanupDriveVaultOrphans } from "./driveGarbageCollect";
@@ -98,7 +100,16 @@ export class DriveSyncService {
         continue;
       }
       const previous = existingById.get(meta.id);
-      if (previous && previous.updatedAt >= meta.updatedAt) {
+      const nestedSceneFileId = await findSceneFileInFolder(
+        writeLocation.scenesFolderId,
+        meta.id,
+      );
+      const previousInNested =
+        !!previous?.driveFileId &&
+        !!nestedSceneFileId &&
+        previous.driveFileId === nestedSceneFileId;
+
+      if (previous && previous.updatedAt >= meta.updatedAt && previousInNested) {
         manifestById.set(meta.id, previous);
         continue;
       }
@@ -107,7 +118,7 @@ export class DriveSyncService {
         scenesFolderId: writeLocation.scenesFolderId,
         sceneId: meta.id,
         content,
-        existingFileId: previous?.driveFileId,
+        existingFileId: nestedSceneFileId,
       });
       manifestById.set(meta.id, {
         id: meta.id,
@@ -122,11 +133,12 @@ export class DriveSyncService {
       .filter((entry) => localIds.has(entry.id))
       .sort((a, b) => b.updatedAt - a.updatedAt);
 
+    const priorWriteScenes = manifestScenesForLocalIds(writeManifest, localIds);
     const manifestChanged =
       uploadedScenes > 0 ||
-      !manifestScenesEqual(nextScenes, existingManifest.scenes);
+      !manifestScenesEqual(nextScenes, priorWriteScenes);
 
-    let syncedAt = existingManifest.updatedAt;
+    let syncedAt = writeManifest?.updatedAt ?? existingManifest.updatedAt;
     if (manifestChanged) {
       const nextManifest = {
         version: existingManifest.version,

@@ -49,6 +49,12 @@ export const mergeDriveManifests = (
   return merged;
 };
 
+export const manifestScenesForLocalIds = (
+  manifest: DriveManifest | null | undefined,
+  localIds: Set<string>,
+): DriveManifestSceneEntry[] =>
+  (manifest?.scenes ?? []).filter((entry) => localIds.has(entry.id));
+
 export const manifestScenesEqual = (
   left: DriveManifestSceneEntry[],
   right: DriveManifestSceneEntry[],
