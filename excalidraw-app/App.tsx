@@ -100,6 +100,7 @@ import Collab, {
 import { AppFooter } from "./components/AppFooter";
 import { AppMainMenu } from "./components/AppMainMenu";
 import { AppWelcomeScreen } from "./components/AppWelcomeScreen";
+import { DriveSceneReloadBanner } from "./components/DriveSceneReloadBanner";
 import { DriveSyncButton } from "./components/DriveSyncButton";
 import { SaveToBrowserOverwriteAction } from "./components/SaveToBrowserOverwriteAction";
 import { SharedSceneBanner } from "./components/SharedSceneBanner";
@@ -160,11 +161,14 @@ import { useDonateReminder } from "./donate/reminder/useDonateReminder";
 import { CONTACT_US_OPEN_EVENT } from "./contact/openContactUs";
 import {
   driveShareService,
+  driveAutoMergeFailToastMessage,
   driveAutoSyncFailToastMessage,
   formatDriveMergeSuccessMessage,
   initDriveAuth,
   isGoogleDriveEnabled,
   parseShareFileIdFromLocation,
+  registerDriveActiveSceneNeedsReloadNotifier,
+  registerDriveAutoMergeFailedNotifier,
   registerDriveAutoMergeSuccessNotifier,
   registerDriveAutoSyncNotifier,
 } from "./google-drive";
@@ -576,11 +580,20 @@ const ExcalidrawWrapper = () => {
     if (!excalidrawAPI || !isGoogleDriveEnabled()) {
       registerDriveAutoSyncNotifier(null);
       registerDriveAutoMergeSuccessNotifier(null);
+      registerDriveAutoMergeFailedNotifier(null);
+      registerDriveActiveSceneNeedsReloadNotifier(null);
       return;
     }
     registerDriveAutoSyncNotifier(() => {
       excalidrawAPI.setToast({
         message: driveAutoSyncFailToastMessage(),
+        closable: true,
+        duration: 6000,
+      });
+    });
+    registerDriveAutoMergeFailedNotifier(() => {
+      excalidrawAPI.setToast({
+        message: driveAutoMergeFailToastMessage(),
         closable: true,
         duration: 6000,
       });
@@ -592,15 +605,23 @@ const ExcalidrawWrapper = () => {
         duration: 5000,
       });
     });
+    registerDriveActiveSceneNeedsReloadNotifier((sceneId) => {
+      setDriveSceneNeedsReload(sceneId);
+    });
     return () => {
       registerDriveAutoSyncNotifier(null);
       registerDriveAutoMergeSuccessNotifier(null);
+      registerDriveAutoMergeFailedNotifier(null);
+      registerDriveActiveSceneNeedsReloadNotifier(null);
     };
   }, [excalidrawAPI]);
 
   const [activeVaultSceneId, setActiveVaultSceneId] = useState<string | null>(
     null,
   );
+  const [driveSceneNeedsReload, setDriveSceneNeedsReload] = useState<
+    string | null
+  >(null);
   const [isExternalVaultScene, setIsExternalVaultScene] = useState(false);
   const vaultQuotaExceeded = useAtomValue(sceneVaultQuotaExceededAtom);
 
@@ -1204,9 +1225,6 @@ const ExcalidrawWrapper = () => {
         autoFocus={true}
         theme={editorTheme}
         renderTopRightUI={(isMobile) => {
-          if (isMobile) {
-            return null;
-          }
           const driveSyncButton =
             isGoogleDriveEnabled() && excalidrawAPI && sceneVaultEnabled ? (
               <DriveSyncButton
@@ -1223,6 +1241,12 @@ const ExcalidrawWrapper = () => {
                 }}
               />
             ) : null;
+
+          if (isMobile) {
+            return driveSyncButton ? (
+              <div className="excalidraw-ui-top-right">{driveSyncButton}</div>
+            ) : null;
+          }
 
           if (isCollabDisabled && !isDriveShareEnabled && !driveSyncButton) {
             return null;
@@ -1352,6 +1376,24 @@ const ExcalidrawWrapper = () => {
             saved drawings and free space.
           </div>
         )}
+        {excalidrawAPI &&
+        driveSceneNeedsReload &&
+        activeVaultSceneId === driveSceneNeedsReload &&
+        !isExternalVaultScene ? (
+          <DriveSceneReloadBanner
+            excalidrawAPI={excalidrawAPI}
+            sceneId={driveSceneNeedsReload}
+            onReloaded={() => {
+              setDriveSceneNeedsReload(null);
+              refreshActiveVaultSceneId();
+              excalidrawAPI.setToast({
+                message: "Scene reloaded from Google Drive.",
+                duration: 4000,
+              });
+            }}
+            onDismiss={() => setDriveSceneNeedsReload(null)}
+          />
+        ) : null}
         {excalidrawAPI && isExternalVaultScene && (
           <SharedSceneBanner
             excalidrawAPI={excalidrawAPI}

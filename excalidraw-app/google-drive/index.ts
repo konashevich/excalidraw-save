@@ -104,10 +104,15 @@ export {
 } from "./shareLink";
 
 export {
+  driveAutoMergeFailToastMessage,
   driveAutoSyncFailToastMessage,
   formatDriveMergeSuccessMessage,
+  notifyDriveActiveSceneNeedsReload,
+  notifyDriveAutoMergeFailed,
   notifyDriveAutoMergeSuccess,
   notifyDriveAutoSyncFailed,
+  registerDriveActiveSceneNeedsReloadNotifier,
+  registerDriveAutoMergeFailedNotifier,
   registerDriveAutoMergeSuccessNotifier,
   registerDriveAutoSyncNotifier,
 } from "./driveAutoSyncNotify";

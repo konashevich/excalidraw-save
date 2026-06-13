@@ -8,6 +8,7 @@ import {
   isGoogleDriveEnabled,
   isGoogleDriveLinked,
   notifyDriveAutoMergeSuccess,
+  notifyDriveAutoMergeFailed,
   withDriveAccess,
 } from "../google-drive";
 
@@ -56,6 +57,7 @@ export const useDriveAutoMerge = ({
         }
       } catch (error) {
         console.error("[google-drive] auto-merge failed:", error);
+        notifyDriveAutoMergeFailed();
       } finally {
         mergingRef.current = false;
       }

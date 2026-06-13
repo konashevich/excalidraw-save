@@ -3,8 +3,14 @@ import type { DriveMergeResult } from "./types";
 const DRIVE_AUTO_SYNC_FAIL_MESSAGE =
   "Google Drive auto-sync failed. Open My scenes and use Sync now.";
 
+const DRIVE_AUTO_MERGE_FAIL_MESSAGE =
+  "Google Drive background sync failed. Open My scenes and use Sync now.";
+
 let notifyAutoSyncFailed: (() => void) | null = null;
 let notifyAutoMergeSuccess: ((result: DriveMergeResult) => void) | null = null;
+let notifyAutoMergeFailed: (() => void) | null = null;
+let notifyActiveSceneNeedsReload: ((sceneId: string | null) => void) | null =
+  null;
 
 export const registerDriveAutoSyncNotifier = (fn: (() => void) | null): void => {
   notifyAutoSyncFailed = fn;
@@ -16,6 +22,18 @@ export const registerDriveAutoMergeSuccessNotifier = (
   notifyAutoMergeSuccess = fn;
 };
 
+export const registerDriveAutoMergeFailedNotifier = (
+  fn: (() => void) | null,
+): void => {
+  notifyAutoMergeFailed = fn;
+};
+
+export const registerDriveActiveSceneNeedsReloadNotifier = (
+  fn: ((sceneId: string | null) => void) | null,
+): void => {
+  notifyActiveSceneNeedsReload = fn;
+};
+
 export const notifyDriveAutoSyncFailed = (): void => {
   notifyAutoSyncFailed?.();
 };
@@ -24,8 +42,21 @@ export const notifyDriveAutoMergeSuccess = (result: DriveMergeResult): void => {
   notifyAutoMergeSuccess?.(result);
 };
 
+export const notifyDriveAutoMergeFailed = (): void => {
+  notifyAutoMergeFailed?.();
+};
+
+export const notifyDriveActiveSceneNeedsReload = (
+  sceneId: string | null,
+): void => {
+  notifyActiveSceneNeedsReload?.(sceneId);
+};
+
 export const driveAutoSyncFailToastMessage = (): string =>
   DRIVE_AUTO_SYNC_FAIL_MESSAGE;
+
+export const driveAutoMergeFailToastMessage = (): string =>
+  DRIVE_AUTO_MERGE_FAIL_MESSAGE;
 
 export const formatDriveMergeSuccessMessage = (
   result: DriveMergeResult,
@@ -46,8 +77,7 @@ export const formatDriveMergeSuccessMessage = (
   }
   let message = parts.join("; ");
   if (result.activeSceneNeedsReload) {
-    message +=
-      ". The open scene was updated on Drive — use Sync in the toolbar to reload it.";
+    message += ". Reload the open scene using the banner above the canvas.";
   }
   return message;
 };

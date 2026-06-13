@@ -14,6 +14,7 @@ import {
 } from "./constants";
 import { driveSyncService } from "./DriveSyncService";
 import { invalidateDriveRemoteManifestCache } from "./driveSyncStatus";
+import { notifyDriveActiveSceneNeedsReload } from "./driveAutoSyncNotify";
 import { getAccessToken, isGoogleDriveLinked } from "./auth";
 import { DriveAuthError } from "./errors";
 
@@ -77,6 +78,8 @@ export class DriveMergeService {
     }
 
     setDriveLastPushRevision(getVaultContentRevision());
+
+    notifyDriveActiveSceneNeedsReload(activeSceneNeedsReload);
 
     return {
       pulled: pull.restoredScenes,

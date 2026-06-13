@@ -17,6 +17,10 @@ import {
   downloadFileText,
 } from "./api";
 import {
+  manifestScenesEqual,
+  mergeDriveManifests,
+} from "./driveManifest";
+import {
   getVaultContentRevision,
   setDriveLastPushAt,
   setDriveLastPushRevision,
@@ -66,18 +70,15 @@ export class DriveSyncService {
     const readLocation = await resolveDriveSyncLocation(folders);
     const scenes = await sceneVaultStore.listScenes();
 
-    let existingManifest = await readDriveManifest(
+    const writeManifest = await readDriveManifest(
       writeLocation.manifestFolderId,
     );
-    if (
-      !existingManifest &&
+    const readManifest =
       readLocation.manifestFolderId !== writeLocation.manifestFolderId
-    ) {
-      existingManifest = await readDriveManifest(
-        readLocation.manifestFolderId,
-      );
-    }
-    existingManifest ??= createEmptyManifest();
+        ? await readDriveManifest(readLocation.manifestFolderId)
+        : null;
+    const existingManifest =
+      mergeDriveManifests(writeManifest, readManifest) ?? createEmptyManifest();
 
     const manifestFileId = await findManifestFileId(
       writeLocation.manifestFolderId,
@@ -116,25 +117,35 @@ export class DriveSyncService {
       uploadedScenes += 1;
     }
 
-    const nextManifest = {
-      version: existingManifest.version,
-      updatedAt: Date.now(),
-      scenes: [...manifestById.values()]
-        .filter((entry) => localIds.has(entry.id))
-        .sort((a, b) => b.updatedAt - a.updatedAt),
-    };
+    const nextScenes = [...manifestById.values()]
+      .filter((entry) => localIds.has(entry.id))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
 
-    await writeDriveManifest(
-      writeLocation.manifestFolderId,
-      nextManifest,
-      manifestFileId,
-    );
+    const manifestChanged =
+      uploadedScenes > 0 ||
+      !manifestScenesEqual(nextScenes, existingManifest.scenes);
 
-    const syncedAt = nextManifest.updatedAt;
-    setDriveLastSyncAt(syncedAt);
-    setDriveLastPushAt(syncedAt);
-    setDriveRemoteManifestAt(syncedAt);
-    invalidateDriveRemoteManifestCache();
+    let syncedAt = existingManifest.updatedAt;
+    if (manifestChanged) {
+      const nextManifest = {
+        version: existingManifest.version,
+        updatedAt: Date.now(),
+        scenes: nextScenes,
+      };
+      await writeDriveManifest(
+        writeLocation.manifestFolderId,
+        nextManifest,
+        manifestFileId,
+      );
+      syncedAt = nextManifest.updatedAt;
+      setDriveRemoteManifestAt(syncedAt);
+      invalidateDriveRemoteManifestCache();
+    }
+
+    if (manifestChanged || uploadedScenes > 0) {
+      setDriveLastSyncAt(syncedAt);
+      setDriveLastPushAt(syncedAt);
+    }
     setDriveLastPushRevision(getVaultContentRevision());
 
     return {
